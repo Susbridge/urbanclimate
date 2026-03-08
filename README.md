@@ -1,20 +1,58 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Air Quality Dashboard 🌍💨
 
-# Run and deploy your AI Studio app
+A premium, interactive Air Quality Intelligence platform featuring multi-version design explorations ranging from Apple-inspired aesthetics to AI-driven insights.
 
-This contains everything you need to run your app locally.
+## ✨ Features
 
-View your app in AI Studio: https://ai.studio/apps/918d3b10-1dd8-4ec0-acff-227b60a5257a
+- 📊 **Real-time Monitoring:** Track AQI, PM2.5, PM10, and other key pollutants.
+- 🎨 **Multi-Version UI:** Explore different design philosophies:
+  - **V1:** Functional dashboard layout.
+  - **V2 (Apple):** Minimalist, glassmorphism-heavy design inspired by Apple's aesthetic.
+  - **V3 (Intelligence):** Dynamic, information-dense layout focused on AI insights.
+- 🌓 **Dark Mode:** Premium dark interface with refined typography and gradients.
+- 📱 **Responsive Design:** Fully optimized for mobile and desktop experiences.
 
-## Run Locally
+## 🚀 Getting Started
 
-**Prerequisites:**  Node.js
+### Prerequisites
 
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- npm or yarn
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/tomiabe/air-quality.git
+   cd air-quality
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure Environment:
+   - Create a `.env.local` file.
+   - Add your Gemini API Key:
+     ```env
+     GEMINI_API_KEY=your_api_key_here
+     ```
+
+4. Run Development Server:
+   ```bash
+   npm run dev
+   ```
+
+## 🛠 Tech Stack
+
+- **Framework:** React + Vite
+- **Styling:** Tailwind CSS (v4)
+- **Animations:** Motion (Framer Motion)
+- **Icons:** Lucide React
+- **Charts:** Recharts
+- **Components:** Shadcn/UI (Radix)
+- **AI Engine:** Google AI Studio (Gemini)
+
+---
+Built with ❤️ by [tomiabe](https://github.com/tomiabe)

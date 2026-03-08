@@ -13,22 +13,22 @@ export default function App() {
   const [version, setVersion] = useState<'v1' | 'v2' | 'v3'>('v3');
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-background/80 backdrop-blur-xl p-1.5 rounded-full border shadow-lg flex gap-1">
-        <button 
-          onClick={() => setVersion('v1')} 
+        <button
+          onClick={() => setVersion('v1')}
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${version === 'v1' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
         >
           V1
         </button>
-        <button 
-          onClick={() => setVersion('v2')} 
+        <button
+          onClick={() => setVersion('v2')}
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${version === 'v2' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
         >
           V2 (Apple)
         </button>
-        <button 
-          onClick={() => setVersion('v3')} 
+        <button
+          onClick={() => setVersion('v3')}
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${version === 'v3' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
         >
           V3 (Intelligence)

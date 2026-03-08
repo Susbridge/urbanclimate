@@ -31,28 +31,41 @@ import {
   CommandList,
 } from "./ui/command";
 
-const AQIGauge = ({ aqi, colorClass }: { aqi: number; colorClass: string }) => {
+const AQIGauge = ({ aqi, colorClass, size = "large" }: { aqi: number; colorClass: string, size?: "large" | "medium" }) => {
   const percentage = Math.min((aqi / 300) * 100, 100);
+  const sizeClass = size === "large" ? "w-64 h-64" : "w-48 h-48";
 
   return (
-    <svg viewBox="0 0 36 36" className="w-64 h-64 -rotate-90 drop-shadow-2xl">
-      <path
-        className="text-black/5 dark:text-white/5"
-        strokeWidth="2"
-        stroke="currentColor"
-        fill="none"
-        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-      />
-      <path
-        className={colorClass}
-        strokeDasharray={`${percentage}, 100`}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        stroke="currentColor"
-        fill="none"
-        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-      />
-    </svg>
+    <div className={`relative flex items-center justify-center ${sizeClass}`}>
+      <svg viewBox="0 0 36 36" className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-2xl">
+        <path
+          className="text-black/5 dark:text-white/5"
+          strokeWidth="2"
+          stroke="currentColor"
+          fill="none"
+          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+        <path
+          className={colorClass}
+          strokeDasharray={`${percentage}, 100`}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="none"
+          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center justify-center pointer-events-none">
+        <span className={size === "large" ? "text-7xl font-light tracking-tighter" : "text-5xl font-light tracking-tighter"}>
+          {aqi}
+        </span>
+        {size === "large" && (
+          <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mt-1">
+            AQI
+          </span>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -68,13 +81,36 @@ const PollutantCard = ({
   unit: string;
 }) => {
   const pct = Math.min((value / max) * 100, 100);
+
+  const getPollutantInfo = (pollutantName: string) => {
+    switch (pollutantName) {
+      case "PM2.5": return "Fine particles that can lodge deeply in the lungs. Major sources: vehicle exhaust, burning wood/waste, and power plants.";
+      case "PM10": return "Coarse dust particles. Can irritate eyes, nose, and throat. Sources: construction sites, unpaved roads, and wind-blown dust.";
+      case "NO₂": return "Nitrogen Dioxide. Primarily from vehicle traffic and power plants. Can cause respiratory issues and aggravate asthma.";
+      case "Ozone": return "Ground-level ozone. Formed when pollutants from cars and plants react in sunlight. Triggers chest pain and airway inflammation.";
+      default: return "";
+    }
+  };
+
   return (
     <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
       <div className="flex justify-between items-start mb-4">
         <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
           {name}
         </span>
-        <Info className="w-4 h-4 text-muted-foreground/50" />
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="hover:bg-black/5 dark:hover:bg-white/10 p-1 rounded-full transition-colors">
+              <Info className="w-4 h-4 text-muted-foreground/50 hover:text-foreground transition-colors" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3 rounded-xl shadow-lg border-white/60 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl text-sm">
+            <p className="font-semibold mb-1">{name}</p>
+            <p className="text-muted-foreground leading-relaxed">
+              {getPollutantInfo(name)}
+            </p>
+          </PopoverContent>
+        </Popover>
       </div>
       <div>
         <div className="flex items-baseline gap-1 mb-2">
@@ -232,15 +268,8 @@ export default function Dashboard() {
                 <AQIGauge
                   aqi={data.current.european_aqi}
                   colorClass={insights.textColor}
+                  size="large"
                 />
-                <div className="absolute flex flex-col items-center">
-                  <span className="text-7xl font-light tracking-tighter">
-                    {data.current.european_aqi}
-                  </span>
-                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mt-1">
-                    AQI
-                  </span>
-                </div>
               </div>
               <div className="mt-6 text-center">
                 <h2 className="text-2xl font-semibold tracking-tight">

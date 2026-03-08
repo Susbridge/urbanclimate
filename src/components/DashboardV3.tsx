@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { format, parseISO } from "date-fns";
 import {
   Wind,
@@ -72,28 +72,41 @@ const ACTIONS = [
 
 // --- Components ---
 
-const AQIGauge = ({ aqi, colorClass }: { aqi: number; colorClass: string }) => {
+const AQIGauge = ({ aqi, colorClass, size = "large" }: { aqi: number; colorClass: string, size?: "large" | "medium" }) => {
   const percentage = Math.min((aqi / 300) * 100, 100);
+  const sizeClass = size === "large" ? "w-64 h-64" : "w-48 h-48";
 
   return (
-    <svg viewBox="0 0 36 36" className="w-64 h-64 -rotate-90 drop-shadow-2xl">
-      <path
-        className="text-black/5 dark:text-white/5"
-        strokeWidth="2"
-        stroke="currentColor"
-        fill="none"
-        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-      />
-      <path
-        className={colorClass}
-        strokeDasharray={`${percentage}, 100`}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        stroke="currentColor"
-        fill="none"
-        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-      />
-    </svg>
+    <div className={`relative flex items-center justify-center ${sizeClass}`}>
+      <svg viewBox="0 0 36 36" className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-2xl">
+        <path
+          className="text-black/5 dark:text-white/5"
+          strokeWidth="2"
+          stroke="currentColor"
+          fill="none"
+          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+        <path
+          className={colorClass}
+          strokeDasharray={`${percentage}, 100`}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="none"
+          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center justify-center pointer-events-none">
+        <span className={size === "large" ? "text-7xl font-light tracking-tighter" : "text-5xl font-light tracking-tighter"}>
+          {aqi}
+        </span>
+        {size === "large" && (
+          <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mt-1">
+            AQI
+          </span>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -109,13 +122,36 @@ const PollutantCard = ({
   unit: string;
 }) => {
   const pct = Math.min((value / max) * 100, 100);
+
+  const getPollutantInfo = (pollutantName: string) => {
+    switch (pollutantName) {
+      case "PM2.5": return "Fine particles that can lodge deeply in the lungs. Major sources: vehicle exhaust, burning wood/waste, and power plants.";
+      case "PM10": return "Coarse dust particles. Can irritate eyes, nose, and throat. Sources: construction sites, unpaved roads, and wind-blown dust.";
+      case "NO₂": return "Nitrogen Dioxide. Primarily from vehicle traffic and power plants. Can cause respiratory issues and aggravate asthma.";
+      case "Ozone": return "Ground-level ozone. Formed when pollutants from cars and plants react in sunlight. Triggers chest pain and airway inflammation.";
+      default: return "";
+    }
+  };
+
   return (
     <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
       <div className="flex justify-between items-start mb-4">
         <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
           {name}
         </span>
-        <Info className="w-4 h-4 text-muted-foreground/50" />
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="hover:bg-black/5 dark:hover:bg-white/10 p-1 rounded-full transition-colors">
+              <Info className="w-4 h-4 text-muted-foreground/50 hover:text-foreground transition-colors" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3 rounded-xl shadow-lg border-white/60 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl text-sm">
+            <p className="font-semibold mb-1">{name}</p>
+            <p className="text-muted-foreground leading-relaxed">
+              {getPollutantInfo(name)}
+            </p>
+          </PopoverContent>
+        </Popover>
       </div>
       <div>
         <div className="flex items-baseline gap-1 mb-2">
@@ -177,6 +213,31 @@ export default function DashboardV3() {
 
   const [activeTab, setActiveTab] = useState<'overview' | 'compare' | 'narrative' | 'action'>('overview');
   const [activeProfile, setActiveProfile] = useState<string>('general');
+
+  // Drag-to-scroll for profiles
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const startDragging = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const stopDragging = () => {
+    setIsDragging(false);
+  };
+
+  const onDrag = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -287,8 +348,8 @@ export default function DashboardV3() {
               onClick={() => setActiveTab(tab.id as any)}
               className={cn(
                 "flex-1 px-4 py-2 text-sm font-semibold rounded-xl transition-all whitespace-nowrap",
-                activeTab === tab.id 
-                  ? "bg-white dark:bg-zinc-800 shadow-sm text-foreground" 
+                activeTab === tab.id
+                  ? "bg-white dark:bg-zinc-800 shadow-sm text-foreground"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -317,7 +378,7 @@ export default function DashboardV3() {
 
         {!loading && !error && data && insights && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            
+
             {/* OVERVIEW TAB */}
             {activeTab === 'overview' && (
               <>
@@ -327,15 +388,8 @@ export default function DashboardV3() {
                     <AQIGauge
                       aqi={data.current.european_aqi}
                       colorClass={insights.textColor}
+                      size="large"
                     />
-                    <div className="absolute flex flex-col items-center">
-                      <span className="text-7xl font-light tracking-tighter">
-                        {data.current.european_aqi}
-                      </span>
-                      <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mt-1">
-                        AQI
-                      </span>
-                    </div>
                   </div>
                   <div className="mt-6 text-center">
                     <h2 className="text-2xl font-semibold tracking-tight">
@@ -363,7 +417,7 @@ export default function DashboardV3() {
 
                 {/* Bento Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  
+
                   {/* People & Health Layer */}
                   <div className="col-span-2 md:col-span-4 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 shadow-sm overflow-hidden">
                     <div className="space-y-6">
@@ -374,22 +428,29 @@ export default function DashboardV3() {
                         <div className={cn(
                           "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
                           profileAdvice.score === "Safe" ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" :
-                          profileAdvice.score === "Not Ideal" ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400" :
-                          "bg-red-500/20 text-red-600 dark:text-red-400"
+                            profileAdvice.score === "Not Ideal" ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400" :
+                              "bg-red-500/20 text-red-600 dark:text-red-400"
                         )}>
                           {profileAdvice.score}
                         </div>
                       </div>
-                      
-                      <div className="flex gap-2 overflow-x-auto pb-4 -mx-6 px-6 hide-scrollbar">
+
+                      <div
+                        ref={scrollRef}
+                        className="flex gap-2 overflow-x-auto pb-4 -mx-6 px-6 hide-scrollbar cursor-grab active:cursor-grabbing select-none"
+                        onMouseDown={startDragging}
+                        onMouseLeave={stopDragging}
+                        onMouseUp={stopDragging}
+                        onMouseMove={onDrag}
+                      >
                         {PROFILES.map(p => (
-                          <button 
+                          <button
                             key={p.id}
                             onClick={() => setActiveProfile(p.id)}
                             className={cn(
-                              "flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap border",
-                              activeProfile === p.id 
-                                ? "bg-primary text-primary-foreground border-primary" 
+                              "flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap border pointer-events-auto",
+                              activeProfile === p.id
+                                ? "bg-primary text-primary-foreground border-primary"
                                 : "bg-white/50 dark:bg-zinc-800/50 border-white/40 dark:border-zinc-700 hover:bg-white/80 dark:hover:bg-zinc-800"
                             )}
                           >
@@ -448,13 +509,12 @@ export default function DashboardV3() {
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* City 1 */}
                   <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 shadow-sm flex flex-col items-center text-center">
                     <h2 className="text-xl font-bold mb-6">{selectedCity.name}</h2>
-                    <AQIGauge aqi={data.current.european_aqi} colorClass={insights.textColor} />
-                    <span className="text-5xl font-light tracking-tighter mt-[-100px] mb-8">{data.current.european_aqi}</span>
-                    <div className="w-full text-left space-y-4 mt-4 border-t border-black/5 dark:border-white/5 pt-4">
+                    <AQIGauge aqi={data.current.european_aqi} colorClass={insights.textColor} size="medium" />
+                    <div className="w-full text-left space-y-4 mt-8 border-t border-black/5 dark:border-white/5 pt-4">
                       <div>
                         <span className="text-xs font-bold uppercase text-muted-foreground">PM2.5</span>
                         <p className="text-xl font-semibold">{data.current.pm2_5} <span className="text-sm font-normal text-muted-foreground">µg/m³</span></p>
@@ -501,9 +561,8 @@ export default function DashboardV3() {
                     </div>
 
                     <h2 className="text-xl font-bold mb-6">{compareCity.name}</h2>
-                    <AQIGauge aqi={compareData.current.european_aqi} colorClass={getBlobColor(compareData.current.european_aqi).replace('bg-', 'text-')} />
-                    <span className="text-5xl font-light tracking-tighter mt-[-100px] mb-8">{compareData.current.european_aqi}</span>
-                    <div className="w-full text-left space-y-4 mt-4 border-t border-black/5 dark:border-white/5 pt-4">
+                    <AQIGauge aqi={compareData.current.european_aqi} colorClass={getBlobColor(compareData.current.european_aqi).replace('bg-', 'text-')} size="medium" />
+                    <div className="w-full text-left space-y-4 mt-8 border-t border-black/5 dark:border-white/5 pt-4">
                       <div>
                         <span className="text-xs font-bold uppercase text-muted-foreground">PM2.5</span>
                         <p className="text-xl font-semibold">{compareData.current.pm2_5} <span className="text-sm font-normal text-muted-foreground">µg/m³</span></p>
@@ -523,9 +582,9 @@ export default function DashboardV3() {
               <div className="space-y-6">
                 <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm prose dark:prose-invert max-w-none">
                   <h2 className="text-3xl font-bold tracking-tight mb-6">Signals Over Time: {selectedCity.name}</h2>
-                  
+
                   <p className="text-lg leading-relaxed mb-6">
-                    Over the past 7 days, {selectedCity.name} has experienced fluctuating air quality, primarily driven by <span className="font-semibold">{insights.mainDrivers.join(" and ").toLowerCase() || "mixed urban emissions"}</span>. 
+                    Over the past 7 days, {selectedCity.name} has experienced fluctuating air quality, primarily driven by <span className="font-semibold">{insights.mainDrivers.join(" and ").toLowerCase() || "mixed urban emissions"}</span>.
                     The current AQI of <span className="font-bold">{data.current.european_aqi}</span> marks a notable moment in this week's environmental narrative.
                   </p>
 
@@ -535,7 +594,7 @@ export default function DashboardV3() {
                   </div>
 
                   <p className="text-lg leading-relaxed mb-6">
-                    Looking at the micro-trends, PM2.5 levels peaked at <span className="font-semibold">{Math.max(...data.hourly.pm2_5)} µg/m³</span>, 
+                    Looking at the micro-trends, PM2.5 levels peaked at <span className="font-semibold">{Math.max(...data.hourly.pm2_5)} µg/m³</span>,
                     which is significantly above the WHO recommended guidelines. This pattern suggests that daily commuter traffic and localized burning are creating predictable, yet hazardous, daily cycles.
                   </p>
 
@@ -546,7 +605,7 @@ export default function DashboardV3() {
                   </div>
 
                   <p className="text-lg leading-relaxed">
-                    Moving forward, if the current weather patterns hold, we expect {insights.status.toLowerCase()} conditions to persist. 
+                    Moving forward, if the current weather patterns hold, we expect {insights.status.toLowerCase()} conditions to persist.
                     Vulnerable populations should continue to monitor these daily rhythms and plan outdoor activities during the mid-day troughs when dispersion is highest.
                   </p>
                 </div>
