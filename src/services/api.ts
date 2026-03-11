@@ -83,14 +83,40 @@ export interface AirQualityData {
   };
 }
 
-export async function fetchAirQuality(city: City): Promise<AirQualityData> {
+export interface EnvironmentalData {
+  aqi: AirQualityData;
+  weather: {
+    current: {
+      time: string;
+      temperature_2m: number;
+      relative_humidity_2m: number;
+      wind_speed_10m: number;
+      is_day: number;
+    };
+  };
+}
+
+export async function fetchAirQuality(city: City): Promise<EnvironmentalData> {
   // Using Open-Meteo's free Air Quality API
-  const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lng}&current=european_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,carbon_monoxide,sulphur_dioxide&hourly=pm10,pm2_5,european_aqi&timezone=${encodeURIComponent(city.timezone)}&past_days=7`;
+  const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lng}&current=european_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,carbon_monoxide,sulphur_dioxide&hourly=pm10,pm2_5,european_aqi&timezone=${encodeURIComponent(city.timezone)}&past_days=7`;
   
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch air quality data");
+  // Using Open-Meteo's free Weather API
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,is_day&timezone=${encodeURIComponent(city.timezone)}`;
+  
+  const [aqiResponse, weatherResponse] = await Promise.all([
+    fetch(aqiUrl),
+    fetch(weatherUrl)
+  ]);
+
+  if (!aqiResponse.ok || !weatherResponse.ok) {
+    throw new Error("Failed to fetch environmental data");
   }
   
-  return response.json();
+  const aqiData = await aqiResponse.json();
+  const weatherData = await weatherResponse.json();
+
+  return {
+    aqi: aqiData,
+    weather: weatherData
+  };
 }

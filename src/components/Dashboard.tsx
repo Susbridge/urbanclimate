@@ -16,7 +16,7 @@ import {
   Clock,
   Lightbulb,
 } from "lucide-react";
-import { CITIES, City, fetchAirQuality, AirQualityData } from "../services/api";
+import { CITIES, City, fetchAirQuality, EnvironmentalData } from "../services/api";
 import { generateInsights, Insights } from "../lib/insightEngine";
 import { cn } from "../lib/utils";
 
@@ -31,41 +31,28 @@ import {
   CommandList,
 } from "./ui/command";
 
-const AQIGauge = ({ aqi, colorClass, size = "large" }: { aqi: number; colorClass: string, size?: "large" | "medium" }) => {
+const AQIGauge = ({ aqi, colorClass }: { aqi: number; colorClass: string }) => {
   const percentage = Math.min((aqi / 300) * 100, 100);
-  const sizeClass = size === "large" ? "w-64 h-64" : "w-48 h-48";
 
   return (
-    <div className={`relative flex items-center justify-center ${sizeClass}`}>
-      <svg viewBox="0 0 36 36" className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-2xl">
-        <path
-          className="text-black/5 dark:text-white/5"
-          strokeWidth="2"
-          stroke="currentColor"
-          fill="none"
-          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-        />
-        <path
-          className={colorClass}
-          strokeDasharray={`${percentage}, 100`}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          stroke="currentColor"
-          fill="none"
-          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-        />
-      </svg>
-      <div className="absolute flex flex-col items-center justify-center pointer-events-none">
-        <span className={size === "large" ? "text-7xl font-light tracking-tighter" : "text-5xl font-light tracking-tighter"}>
-          {aqi}
-        </span>
-        {size === "large" && (
-          <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mt-1">
-            AQI
-          </span>
-        )}
-      </div>
-    </div>
+    <svg viewBox="0 0 36 36" className="w-64 h-64 -rotate-90 drop-shadow-2xl">
+      <path
+        className="text-black/5 dark:text-white/5"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+      />
+      <path
+        className={colorClass}
+        strokeDasharray={`${percentage}, 100`}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        stroke="currentColor"
+        fill="none"
+        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+      />
+    </svg>
   );
 };
 
@@ -81,36 +68,13 @@ const PollutantCard = ({
   unit: string;
 }) => {
   const pct = Math.min((value / max) * 100, 100);
-
-  const getPollutantInfo = (pollutantName: string) => {
-    switch (pollutantName) {
-      case "PM2.5": return "Fine particles that can lodge deeply in the lungs. Major sources: vehicle exhaust, burning wood/waste, and power plants.";
-      case "PM10": return "Coarse dust particles. Can irritate eyes, nose, and throat. Sources: construction sites, unpaved roads, and wind-blown dust.";
-      case "NO₂": return "Nitrogen Dioxide. Primarily from vehicle traffic and power plants. Can cause respiratory issues and aggravate asthma.";
-      case "Ozone": return "Ground-level ozone. Formed when pollutants from cars and plants react in sunlight. Triggers chest pain and airway inflammation.";
-      default: return "";
-    }
-  };
-
   return (
     <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
       <div className="flex justify-between items-start mb-4">
         <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
           {name}
         </span>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="hover:bg-black/5 dark:hover:bg-white/10 p-1 rounded-full transition-colors">
-              <Info className="w-4 h-4 text-muted-foreground/50 hover:text-foreground transition-colors" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 p-3 rounded-xl shadow-lg border-white/60 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-3xl text-sm">
-            <p className="font-semibold mb-1">{name}</p>
-            <p className="text-muted-foreground leading-relaxed">
-              {getPollutantInfo(name)}
-            </p>
-          </PopoverContent>
-        </Popover>
+        <Info className="w-4 h-4 text-muted-foreground/50" />
       </div>
       <div>
         <div className="flex items-baseline gap-1 mb-2">
@@ -143,7 +107,7 @@ export default function Dashboard() {
   const selectedCity = CITIES.find((c) => c.id === selectedCityId) || CITIES[0];
   const [openCitySelector, setOpenCitySelector] = useState(false);
 
-  const [data, setData] = useState<AirQualityData | null>(null);
+  const [data, setData] = useState<EnvironmentalData | null>(null);
   const [insights, setInsights] = useState<Insights | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,7 +122,7 @@ export default function Dashboard() {
         const result = await fetchAirQuality(selectedCity);
         if (mounted) {
           setData(result);
-          setInsights(generateInsights(result));
+          setInsights(generateInsights(result.aqi));
         }
       } catch (err) {
         if (mounted) setError("Failed to load environmental data.");
@@ -176,14 +140,18 @@ export default function Dashboard() {
   // Hourly Data
   const now = new Date();
   const currentIndex =
-    data?.hourly.time.findIndex((t) => new Date(t) >= now) || 0;
+    data?.aqi.hourly.time.findIndex((t) => new Date(t) >= now) || 0;
   const next24Hours =
-    data?.hourly.time
+    data?.aqi.hourly.time
       .slice(currentIndex, currentIndex + 24)
       .map((timeStr, idx) => ({
         time: timeStr,
-        aqi: data.hourly.european_aqi?.[currentIndex + idx] || 0,
+        aqi: data.aqi.hourly.european_aqi?.[currentIndex + idx] || 0,
       })) || [];
+
+  const localTime = data?.weather.current.time 
+    ? format(parseISO(data.weather.current.time), "h:mm a")
+    : "";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground font-sans pb-24 relative overflow-hidden transition-colors duration-500">
@@ -192,20 +160,26 @@ export default function Dashboard() {
         <div
           className={cn(
             "absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-30 dark:opacity-20 transition-colors duration-1000",
-            getBlobColor(data?.current.european_aqi || 0),
+            getBlobColor(data?.aqi.current.european_aqi || 0),
           )}
         />
         <div
           className={cn(
             "absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-20 dark:opacity-10 transition-colors duration-1000",
-            getBlobColor((data?.current.european_aqi || 0) + 20),
+            getBlobColor((data?.aqi.current.european_aqi || 0) + 20),
           )}
         />
       </div>
 
       {/* Header */}
       <header className="relative z-40 pt-6 pb-4 px-6 flex justify-between items-center max-w-4xl mx-auto">
-        <div className="w-10" /> {/* Spacer */}
+        <div className="flex-1 flex justify-start">
+          {!loading && localTime && (
+            <span className="text-sm font-medium text-muted-foreground bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full">
+              {localTime}
+            </span>
+          )}
+        </div>
         <Popover open={openCitySelector} onOpenChange={setOpenCitySelector}>
           <PopoverTrigger asChild>
             <button className="flex items-center gap-2 text-xl font-semibold tracking-tight hover:opacity-70 transition-opacity">
@@ -240,7 +214,9 @@ export default function Dashboard() {
             </Command>
           </PopoverContent>
         </Popover>
-        <ModeToggle />
+        <div className="flex-1 flex justify-end">
+          <ModeToggle />
+        </div>
       </header>
 
       <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
@@ -266,10 +242,17 @@ export default function Dashboard() {
             <div className="flex flex-col items-center justify-center py-8 mb-4">
               <div className="relative flex items-center justify-center">
                 <AQIGauge
-                  aqi={data.current.european_aqi}
+                  aqi={data.aqi.current.european_aqi}
                   colorClass={insights.textColor}
-                  size="large"
                 />
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-7xl font-light tracking-tighter">
+                    {data.aqi.current.european_aqi}
+                  </span>
+                  <span className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mt-1">
+                    AQI
+                  </span>
+                </div>
               </div>
               <div className="mt-6 text-center">
                 <h2 className="text-2xl font-semibold tracking-tight">
@@ -332,25 +315,25 @@ export default function Dashboard() {
               {/* Pollutants */}
               <PollutantCard
                 name="PM2.5"
-                value={data.current.pm2_5}
+                value={data.aqi.current.pm2_5}
                 max={50}
                 unit="µg/m³"
               />
               <PollutantCard
                 name="PM10"
-                value={data.current.pm10}
+                value={data.aqi.current.pm10}
                 max={100}
                 unit="µg/m³"
               />
               <PollutantCard
                 name="NO₂"
-                value={data.current.nitrogen_dioxide}
+                value={data.aqi.current.nitrogen_dioxide}
                 max={100}
                 unit="µg/m³"
               />
               <PollutantCard
                 name="Ozone"
-                value={data.current.ozone}
+                value={data.aqi.current.ozone}
                 max={150}
                 unit="µg/m³"
               />

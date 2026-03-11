@@ -7,36 +7,52 @@ import { useState } from "react";
 import DashboardV1 from "./components/DashboardV1";
 import DashboardV2 from "./components/Dashboard";
 import DashboardV3 from "./components/DashboardV3";
+import DashboardV4 from "./components/DashboardV4";
+import DashboardV5 from "./components/DashboardV5";
 import { ThemeProvider } from "./components/ThemeProvider";
 
 export default function App() {
-  const [version, setVersion] = useState<'v1' | 'v2' | 'v3'>('v3');
+  const [version, setVersion] = useState<'v1' | 'v2' | 'v3' | 'v4' | 'v5'>('v5');
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="auto" storageKey="vite-ui-theme">
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-background/80 backdrop-blur-xl p-1.5 rounded-full border shadow-lg flex gap-1">
-        <button
-          onClick={() => setVersion('v1')}
+        <button 
+          onClick={() => setVersion('v1')} 
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${version === 'v1' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
         >
           V1
         </button>
-        <button
-          onClick={() => setVersion('v2')}
+        <button 
+          onClick={() => setVersion('v2')} 
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${version === 'v2' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
         >
           V2 (Apple)
         </button>
-        <button
-          onClick={() => setVersion('v3')}
+        <button 
+          onClick={() => setVersion('v3')} 
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${version === 'v3' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
         >
           V3 (Intelligence)
+        </button>
+        <button 
+          onClick={() => setVersion('v4')} 
+          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${version === 'v4' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+        >
+          V4 (Systems)
+        </button>
+        <button 
+          onClick={() => setVersion('v5')} 
+          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${version === 'v5' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+        >
+          V5 (Unified)
         </button>
       </div>
       {version === 'v1' && <DashboardV1 />}
       {version === 'v2' && <DashboardV2 />}
       {version === 'v3' && <DashboardV3 />}
+      {version === 'v4' && <DashboardV4 />}
+      {version === 'v5' && <DashboardV5 />}
     </ThemeProvider>
   );
 }

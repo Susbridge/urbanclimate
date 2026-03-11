@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 
-type Theme = "dark" | "light" | "system"
+type Theme = "dark" | "light" | "auto"
 
 type ThemeProviderProps = {
   children: React.ReactNode
@@ -14,7 +14,7 @@ type ThemeProviderState = {
 }
 
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: "auto",
   setTheme: () => null,
 }
 
@@ -22,7 +22,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = "dark",
+  defaultTheme = "auto",
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
@@ -35,13 +35,13 @@ export function ThemeProvider({
 
     root.classList.remove("light", "dark")
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
+    if (theme === "auto") {
+      const hour = new Date().getHours()
+      // Light from 7am (7) to 7pm (18:59). Dark from 7pm (19) to 7am (6:59)
+      const isDayTime = hour >= 7 && hour < 19
+      const timeTheme = isDayTime ? "light" : "dark"
 
-      root.classList.add(systemTheme)
+      root.classList.add(timeTheme)
       return
     }
 

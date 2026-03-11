@@ -7,7 +7,7 @@ import {
   Wind, MapPin, Activity, AlertTriangle, Info, 
   TrendingUp, Leaf, Building, Droplets, Globe2
 } from "lucide-react";
-import { CITIES, City, fetchAirQuality, AirQualityData } from "../services/api";
+import { CITIES, City, fetchAirQuality, EnvironmentalData } from "../services/api";
 import { generateInsights, Insights } from "../lib/insightEngine";
 import { cn } from "../lib/utils";
 
@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [selectedCityId, setSelectedCityId] = useState<string>(CITIES[0].id);
   const selectedCity = CITIES.find(c => c.id === selectedCityId) || CITIES[0];
   
-  const [data, setData] = useState<AirQualityData | null>(null);
+  const [data, setData] = useState<EnvironmentalData | null>(null);
   const [insights, setInsights] = useState<Insights | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export default function Dashboard() {
         const result = await fetchAirQuality(selectedCity);
         if (mounted) {
           setData(result);
-          setInsights(generateInsights(result));
+          setInsights(generateInsights(result.aqi));
         }
       } catch (err) {
         if (mounted) setError("Failed to load environmental data.");
@@ -49,16 +49,20 @@ export default function Dashboard() {
   }, [selectedCity]);
 
   // Format chart data
-  const chartData = data?.hourly.time.map((timeStr, index) => ({
+  const chartData = data?.aqi.hourly.time.map((timeStr, index) => ({
     time: format(parseISO(timeStr), "MMM d, HH:mm"),
-    pm25: data.hourly.pm2_5[index],
-    pm10: data.hourly.pm10[index],
+    pm25: data.aqi.hourly.pm2_5[index],
+    pm10: data.aqi.hourly.pm10[index],
   })).slice(-48); // Last 48 hours for better visibility
 
   const cityOptions = CITIES.map(city => ({
     value: city.id,
     label: `${city.name}, ${city.country}`
   }));
+
+  const localTime = data?.weather.current.time 
+    ? format(parseISO(data.weather.current.time), "h:mm a")
+    : "";
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans pb-20 transition-colors duration-300">
@@ -71,6 +75,11 @@ export default function Dashboard() {
             <span className="font-bold tracking-tight text-lg sm:hidden">AES</span>
           </div>
           <div className="flex items-center space-x-4">
+            {!loading && localTime && (
+              <span className="text-sm font-medium text-muted-foreground bg-secondary px-3 py-1 rounded-full hidden sm:inline-block">
+                {localTime}
+              </span>
+            )}
             <Badge variant="secondary" className="hidden md:inline-flex">Source Data Hub</Badge>
             <ModeToggle />
           </div>
@@ -89,7 +98,7 @@ export default function Dashboard() {
               Real-time air quality and SDG impact tracking across Africa.
             </p>
           </div>
-          <div className="w-full md:w-auto">
+          <div className="w-full md:w-auto flex flex-col items-end">
             <Combobox 
               options={cityOptions} 
               value={selectedCityId} 
@@ -137,7 +146,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="mb-2 flex items-baseline">
-                    <span className="text-7xl font-bold tracking-tighter">{data.current.european_aqi}</span>
+                    <span className="text-7xl font-bold tracking-tighter">{data.aqi.current.european_aqi}</span>
                     <span className="text-xl text-muted-foreground ml-2 font-medium">AQI</span>
                   </div>
                   
@@ -160,25 +169,25 @@ export default function Dashboard() {
                 <Card className="shadow-sm">
                   <CardContent className="p-4">
                     <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">PM2.5</div>
-                    <div className="text-2xl font-semibold">{data.current.pm2_5} <span className="text-xs text-muted-foreground font-normal">µg/m³</span></div>
+                    <div className="text-2xl font-semibold">{data.aqi.current.pm2_5} <span className="text-xs text-muted-foreground font-normal">µg/m³</span></div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-sm">
                   <CardContent className="p-4">
                     <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">PM10</div>
-                    <div className="text-2xl font-semibold">{data.current.pm10} <span className="text-xs text-muted-foreground font-normal">µg/m³</span></div>
+                    <div className="text-2xl font-semibold">{data.aqi.current.pm10} <span className="text-xs text-muted-foreground font-normal">µg/m³</span></div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-sm">
                   <CardContent className="p-4">
                     <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">NO₂</div>
-                    <div className="text-2xl font-semibold">{data.current.nitrogen_dioxide} <span className="text-xs text-muted-foreground font-normal">µg/m³</span></div>
+                    <div className="text-2xl font-semibold">{data.aqi.current.nitrogen_dioxide} <span className="text-xs text-muted-foreground font-normal">µg/m³</span></div>
                   </CardContent>
                 </Card>
                 <Card className="shadow-sm">
                   <CardContent className="p-4">
                     <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Ozone</div>
-                    <div className="text-2xl font-semibold">{data.current.ozone} <span className="text-xs text-muted-foreground font-normal">µg/m³</span></div>
+                    <div className="text-2xl font-semibold">{data.aqi.current.ozone} <span className="text-xs text-muted-foreground font-normal">µg/m³</span></div>
                   </CardContent>
                 </Card>
               </div>
