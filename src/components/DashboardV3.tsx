@@ -375,8 +375,8 @@ export default function DashboardV3() {
       </header>
 
       <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="mb-12 text-center">
-          <p className="text-lg font-medium text-muted-foreground max-w-3xl mx-auto">
+        <div className="mb-8 sm:mb-12 text-center">
+          <p className="text-base sm:text-lg font-medium text-muted-foreground max-w-3xl mx-auto">
             Urban Climate Signals explains why cities feel hotter, how pollution builds up, and what policies can improve urban climate conditions.
           </p>
         </div>
@@ -413,26 +413,26 @@ export default function DashboardV3() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Heat Index Explanation */}
-                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm flex flex-col justify-between">
+                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                         <ThermometerSun className="w-4 h-4 text-orange-500" /> How It Feels Outside
                       </h3>
-                      <span className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider", getHeatLabel(heatIndex).bg, getHeatLabel(heatIndex).color)}>
+                      <span className={cn("px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider", getHeatLabel(heatIndex).bg, getHeatLabel(heatIndex).color)}>
                         {getHeatLabel(heatIndex).text}
                       </span>
                     </div>
                     
-                    <div className="flex items-baseline gap-4 mb-8">
+                    <div className="flex items-center justify-center sm:justify-start gap-4 sm:gap-6 mb-8">
                       <div className="text-center">
-                        <span className="text-6xl font-light tracking-tighter">{liveTemp}°</span>
-                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-2">Air Temp</p>
+                        <span className="text-5xl sm:text-6xl font-light tracking-tighter">{liveTemp}°</span>
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground mt-2">Air Temp</p>
                       </div>
-                      <span className="text-4xl font-light text-muted-foreground/30">→</span>
+                      <span className="text-3xl sm:text-4xl font-light text-muted-foreground/30">→</span>
                       <div className="text-center">
-                        <span className="text-6xl font-light tracking-tighter text-red-500">{heatIndex}°</span>
-                        <p className="text-xs font-bold uppercase tracking-wider text-red-500 mt-2">Feels Like</p>
+                        <span className="text-5xl sm:text-6xl font-light tracking-tighter text-red-500">{heatIndex}°</span>
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-red-500 mt-2">Feels Like</p>
                       </div>
                     </div>
 
@@ -491,10 +491,10 @@ export default function DashboardV3() {
                 </div>
 
                 {/* AQI & Health Impact */}
-                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm flex flex-col justify-between">
+                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                         <Activity className="w-4 h-4 text-purple-500" /> Air Quality Status
                         <Popover>
                           <PopoverTrigger>
@@ -537,10 +537,10 @@ export default function DashboardV3() {
               </div>
 
               {/* Today's System Drivers */}
-              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm mt-6">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-bold tracking-tight">What's Making Conditions Worse Today?</h3>
+                  <h3 className="text-lg sm:text-xl font-bold tracking-tight">What's Making Conditions Worse Today?</h3>
                 </div>
                 <p className="text-sm font-medium text-muted-foreground mb-6">
                   What's amplifying the environmental stress right now?
@@ -564,8 +564,8 @@ export default function DashboardV3() {
               </div>
 
               {/* Particulate Matter Chart */}
-              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-2">
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm mt-6">
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-2">
                   <Activity className="w-4 h-4 text-primary" /> Particulate Matter Concentration (Last 24h)
                 </h3>
                 <p className="text-sm font-medium text-muted-foreground mb-6">
@@ -608,8 +608,8 @@ export default function DashboardV3() {
                   Cities behave like systems. When temperatures rise, pollution can increase. When pollution increases, it can trap more heat. Temperature, humidity, pollution, and urban infrastructure interact to produce heat stress and air quality outcomes.
                 </p>
               </div>
-              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm">
-                <h3 className="text-xl font-bold tracking-tight mb-6">How the City Climate System Works</h3>
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm">
+                <h3 className="text-lg sm:text-xl font-bold tracking-tight mb-6">How the City Climate System Works</h3>
                 <SystemsMap />
               </div>
             </section>
@@ -637,8 +637,8 @@ export default function DashboardV3() {
                   How well is {selectedCity.name} currently meeting the UN Sustainable Development Goals based on these live environmental signals?
                 </p>
               </div>
-              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm">
-                <h3 className="text-xl font-bold tracking-tight mb-6">City Resilience Scorecard</h3>
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm">
+                <h3 className="text-lg sm:text-xl font-bold tracking-tight mb-6">City Resilience Scorecard</h3>
                 <SDGTracker aqi={liveAQI} heatIndex={heatIndex} pm25={data.aqi.current.pm2_5} />
               </div>
             </section>

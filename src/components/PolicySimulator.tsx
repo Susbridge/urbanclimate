@@ -70,8 +70,8 @@ export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: Pol
   return (
     <div className="grid md:grid-cols-12 gap-6">
       {/* Controls Panel */}
-      <div className="md:col-span-7 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm">
-        <h2 className="text-2xl font-bold tracking-tight mb-8">Actions Cities Can Take</h2>
+      <div className="md:col-span-7 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-8">Actions Cities Can Take</h2>
         
         <div className="space-y-8">
           {/* Tree Cover */}
@@ -152,7 +152,7 @@ export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: Pol
       {/* Output Panel */}
       <div className="md:col-span-5 flex flex-col gap-6">
         {/* Heat Index Output */}
-        <div className="flex-1 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm flex flex-col justify-center items-center text-center relative overflow-hidden">
+        <div className="flex-1 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col justify-center items-center text-center relative overflow-hidden">
           <div className="absolute top-4 left-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <Activity className="w-4 h-4" /> Heat Index
           </div>
@@ -176,7 +176,7 @@ export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: Pol
         </div>
 
         {/* AQI Output */}
-        <div className="flex-1 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm flex flex-col justify-center items-center text-center relative overflow-hidden">
+        <div className="flex-1 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col justify-center items-center text-center relative overflow-hidden">
           <div className="absolute top-4 left-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <AlertTriangle className="w-4 h-4" /> Air Quality (AQI)
           </div>

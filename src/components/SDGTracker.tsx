@@ -62,7 +62,7 @@ export default function SDGTracker({ aqi, heatIndex, pm25 }: SDGTrackerProps) {
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* SDG 3 */}
-      <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm flex flex-col justify-between">
+      <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -118,7 +118,7 @@ export default function SDGTracker({ aqi, heatIndex, pm25 }: SDGTrackerProps) {
       </div>
 
       {/* SDG 11 */}
-      <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm flex flex-col justify-between">
+      <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">

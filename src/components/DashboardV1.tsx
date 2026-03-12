@@ -387,16 +387,16 @@ export default function DashboardV1() {
               <div>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">1</div>
-                  <h2 className="text-3xl font-bold tracking-tight">The Current Reality</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">The Current Reality</h2>
                 </div>
-                <p className="text-muted-foreground font-medium max-w-2xl text-lg">
+                <p className="text-muted-foreground font-medium max-w-2xl text-base sm:text-lg">
                   Real-time environmental conditions in {selectedCity.name}.
                 </p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Heat Index Explanation */}
-                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm flex flex-col justify-between">
+                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -409,12 +409,12 @@ export default function DashboardV1() {
                     
                     <div className="flex items-baseline gap-4 mb-8">
                       <div className="text-center">
-                        <span className="text-6xl font-light tracking-tighter">{liveTemp}°</span>
+                        <span className="text-5xl sm:text-6xl font-light tracking-tighter">{liveTemp}°</span>
                         <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-2">Air Temp</p>
                       </div>
-                      <span className="text-4xl font-light text-muted-foreground/30">→</span>
+                      <span className="text-3xl sm:text-4xl font-light text-muted-foreground/30">→</span>
                       <div className="text-center">
-                        <span className="text-6xl font-light tracking-tighter text-red-500">{heatIndex}°</span>
+                        <span className="text-5xl sm:text-6xl font-light tracking-tighter text-red-500">{heatIndex}°</span>
                         <p className="text-xs font-bold uppercase tracking-wider text-red-500 mt-2">Feels Like</p>
                       </div>
                     </div>
@@ -474,7 +474,7 @@ export default function DashboardV1() {
                 </div>
 
                 {/* AQI & Pollution Feedback Loop */}
-                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm flex flex-col justify-between">
+                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -485,15 +485,15 @@ export default function DashboardV1() {
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-6 mb-8">
+                    <div className="flex flex-col sm:flex-row items-center gap-6 mb-8">
                       <div className="relative flex items-center justify-center">
                         <AQIGauge aqi={liveAQI} colorClass={getAQILabel(liveAQI).color} />
                         <div className="absolute flex flex-col items-center">
-                          <span className="text-5xl font-light tracking-tighter">{liveAQI}</span>
+                          <span className="text-4xl sm:text-5xl font-light tracking-tighter">{liveAQI}</span>
                           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">AQI</span>
                         </div>
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 text-center sm:text-left">
                         <p className="text-lg font-medium leading-relaxed mb-6">
                           Heat doesn't just feel bad—it actively worsens air quality.
                         </p>
@@ -539,7 +539,7 @@ export default function DashboardV1() {
               </div>
 
               {/* Today's System Drivers */}
-              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm mt-6">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   <h3 className="text-lg font-bold tracking-tight">Today's System Drivers</h3>
@@ -566,7 +566,7 @@ export default function DashboardV1() {
               </div>
 
               {/* Particulate Matter Chart */}
-              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm mt-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-2">
                   <Activity className="w-4 h-4 text-primary" /> Particulate Matter Concentration (Last 24h)
                 </h3>
@@ -600,7 +600,7 @@ export default function DashboardV1() {
 
               {/* Health Advice */}
               {insights && (
-                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
+                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm mt-6">
                   <div className="flex items-start gap-4">
                     <div
                       className={cn(
@@ -629,13 +629,13 @@ export default function DashboardV1() {
               <div>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">2</div>
-                  <h2 className="text-3xl font-bold tracking-tight">The Underlying System</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">The Underlying System</h2>
                 </div>
-                <p className="text-muted-foreground font-medium max-w-2xl text-lg">
+                <p className="text-muted-foreground font-medium max-w-2xl text-base sm:text-lg">
                   Why is this happening? Explore how urbanization, climate, and human activity interact to amplify heat stress and worsen air quality.
                 </p>
               </div>
-              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm">
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm">
                 <SystemsMap />
               </div>
             </section>
@@ -645,9 +645,9 @@ export default function DashboardV1() {
               <div>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">3</div>
-                  <h2 className="text-3xl font-bold tracking-tight">Policy Intervention Simulator</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Policy Intervention Simulator</h2>
                 </div>
-                <p className="text-muted-foreground font-medium max-w-2xl text-lg">
+                <p className="text-muted-foreground font-medium max-w-2xl text-base sm:text-lg">
                   What can we do about it? Adjust the levers below to simulate how different urban policies impact the heat index and air quality.
                 </p>
               </div>
@@ -659,9 +659,9 @@ export default function DashboardV1() {
               <div>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">4</div>
-                  <h2 className="text-3xl font-bold tracking-tight">City Sustainability Scorecard</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">City Sustainability Scorecard</h2>
                 </div>
-                <p className="text-muted-foreground font-medium max-w-2xl text-lg">
+                <p className="text-muted-foreground font-medium max-w-2xl text-base sm:text-lg">
                   How well is {selectedCity.name} currently meeting the UN Sustainable Development Goals based on these live environmental signals?
                 </p>
               </div>
