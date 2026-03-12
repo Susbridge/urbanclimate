@@ -17,17 +17,18 @@ import '@xyflow/react/dist/style.css';
 import { cn } from '../lib/utils';
 import { Activity, Wind, ThermometerSun, Building, Leaf, Droplets, Zap, AlertTriangle } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
+import dagre from 'dagre';
 
 // Custom Node for Glassmorphism
-const CustomNode = ({ data, selected }: NodeProps) => {
+const CustomNode = ({ data, targetPosition = Position.Top, sourcePosition = Position.Bottom, selected }: NodeProps) => {
   const Icon = data.icon as React.ElementType;
   return (
     <div className={cn(
-      "px-4 py-3 rounded-2xl backdrop-blur-xl border shadow-lg transition-all min-w-[160px]",
+      "px-4 py-3 rounded-2xl backdrop-blur-xl border shadow-lg transition-all min-w-[200px]",
       selected ? "border-primary ring-2 ring-primary/20" : "border-white/20 dark:border-zinc-800/50",
       data.color || "bg-white/40 dark:bg-zinc-900/40"
     )}>
-      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-primary border-none" />
+      <Handle type="target" position={targetPosition} className="w-2 h-2 !bg-primary border-none" />
       <div className="flex items-center gap-3">
         <div className={cn("p-2 rounded-xl", data.iconBg || "bg-primary/10 text-primary")}>
           <Icon className="w-5 h-5" />
@@ -37,7 +38,7 @@ const CustomNode = ({ data, selected }: NodeProps) => {
           <div className="text-sm font-semibold">{data.label}</div>
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-primary border-none" />
+      <Handle type="source" position={sourcePosition} className="w-2 h-2 !bg-primary border-none" />
     </div>
   );
 };
@@ -47,17 +48,18 @@ const nodeTypes = {
 };
 
 const initialNodes: Node[] = [
-  { id: '1', type: 'custom', position: { x: 250, y: 50 }, data: { label: 'Urbanization', category: 'Driver', icon: Building, color: 'bg-slate-500/10 dark:bg-slate-500/20', iconBg: 'bg-slate-500/20 text-slate-500' } },
-  { id: '2', type: 'custom', position: { x: 50, y: 50 }, data: { label: 'Tree Cover', category: 'Mitigator', icon: Leaf, color: 'bg-emerald-500/10 dark:bg-emerald-500/20', iconBg: 'bg-emerald-500/20 text-emerald-500' } },
-  { id: '3', type: 'custom', position: { x: 450, y: 50 }, data: { label: 'Temperature', category: 'Climate', icon: ThermometerSun, color: 'bg-orange-500/10 dark:bg-orange-500/20', iconBg: 'bg-orange-500/20 text-orange-500' } },
-  { id: '4', type: 'custom', position: { x: 650, y: 50 }, data: { label: 'Humidity', category: 'Climate', icon: Droplets, color: 'bg-blue-500/10 dark:bg-blue-500/20', iconBg: 'bg-blue-500/20 text-blue-500' } },
-  { id: '5', type: 'custom', position: { x: 850, y: 50 }, data: { label: 'Wind Speed', category: 'Climate', icon: Wind, color: 'bg-cyan-500/10 dark:bg-cyan-500/20', iconBg: 'bg-cyan-500/20 text-cyan-500' } },
-  { id: '6', type: 'custom', position: { x: 250, y: 200 }, data: { label: 'Generator Use', category: 'Driver', icon: Zap, color: 'bg-yellow-500/10 dark:bg-yellow-500/20', iconBg: 'bg-yellow-500/20 text-yellow-500' } },
-  { id: '7', type: 'custom', position: { x: 450, y: 200 }, data: { label: 'Heat Index', category: 'Impact', icon: Activity, color: 'bg-red-500/10 dark:bg-red-500/20', iconBg: 'bg-red-500/20 text-red-500' } },
-  { id: '8', type: 'custom', position: { x: 250, y: 350 }, data: { label: 'Air Quality (AQI)', category: 'Impact', icon: AlertTriangle, color: 'bg-purple-500/10 dark:bg-purple-500/20', iconBg: 'bg-purple-500/20 text-purple-500' } },
+  { id: '1', type: 'custom', position: { x: 0, y: 0 }, data: { label: 'Urbanization', category: 'Driver', icon: Building, color: 'bg-slate-500/10 dark:bg-slate-500/20', iconBg: 'bg-slate-500/20 text-slate-500' } },
+  { id: '2', type: 'custom', position: { x: 0, y: 0 }, data: { label: 'Tree Cover', category: 'Mitigator', icon: Leaf, color: 'bg-emerald-500/10 dark:bg-emerald-500/20', iconBg: 'bg-emerald-500/20 text-emerald-500' } },
+  { id: '3', type: 'custom', position: { x: 0, y: 0 }, data: { label: 'Temperature', category: 'Climate', icon: ThermometerSun, color: 'bg-orange-500/10 dark:bg-orange-500/20', iconBg: 'bg-orange-500/20 text-orange-500' } },
+  { id: '4', type: 'custom', position: { x: 0, y: 0 }, data: { label: 'Humidity', category: 'Climate', icon: Droplets, color: 'bg-blue-500/10 dark:bg-blue-500/20', iconBg: 'bg-blue-500/20 text-blue-500' } },
+  { id: '5', type: 'custom', position: { x: 0, y: 0 }, data: { label: 'Wind Speed', category: 'Climate', icon: Wind, color: 'bg-cyan-500/10 dark:bg-cyan-500/20', iconBg: 'bg-cyan-500/20 text-cyan-500' } },
+  { id: '6', type: 'custom', position: { x: 0, y: 0 }, data: { label: 'Generator Use', category: 'Driver', icon: Zap, color: 'bg-yellow-500/10 dark:bg-yellow-500/20', iconBg: 'bg-yellow-500/20 text-yellow-500' } },
+  { id: '7', type: 'custom', position: { x: 0, y: 0 }, data: { label: 'Heat Index', category: 'Impact', icon: Activity, color: 'bg-red-500/10 dark:bg-red-500/20', iconBg: 'bg-red-500/20 text-red-500' } },
+  { id: '8', type: 'custom', position: { x: 0, y: 0 }, data: { label: 'Air Quality (AQI)', category: 'Impact', icon: AlertTriangle, color: 'bg-purple-500/10 dark:bg-purple-500/20', iconBg: 'bg-purple-500/20 text-purple-500' } },
 ];
 
 const redEdgeProps = {
+  type: 'smoothstep',
   animated: true,
   style: { stroke: '#ef4444', strokeWidth: 1.5 },
   labelStyle: { fill: '#ffffff', fontWeight: 700, fontSize: 10, letterSpacing: 0.5 },
@@ -67,6 +69,7 @@ const redEdgeProps = {
 };
 
 const greenEdgeProps = {
+  type: 'smoothstep',
   animated: true,
   style: { stroke: '#10b981', strokeWidth: 1.5 },
   labelStyle: { fill: '#ffffff', fontWeight: 700, fontSize: 10, letterSpacing: 0.5 },
@@ -87,13 +90,67 @@ const initialEdges: Edge[] = [
   { id: 'e3-8', source: '3', target: '8', label: 'Traps Pollution', ...redEdgeProps },
 ];
 
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => {
+  const isHorizontal = direction === 'LR';
+  dagreGraph.setGraph({ rankdir: direction, ranksep: 120, nodesep: 60 });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: 220, height: 80 });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    const targetPosition = isHorizontal ? Position.Left : Position.Top;
+    const sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
+
+    return {
+      ...node,
+      targetPosition,
+      sourcePosition,
+      position: {
+        x: nodeWithPosition.x - 220 / 2,
+        y: nodeWithPosition.y - 80 / 2,
+      },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
+};
+
 export default function SystemsMap() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { theme } = useTheme();
 
   // Determine actual theme if 'auto' is selected
   const isDark = theme === 'dark' || (theme === 'auto' && (new Date().getHours() < 7 || new Date().getHours() >= 19));
+
+  useEffect(() => {
+    const updateLayout = () => {
+      // Use Top-to-Bottom on mobile, Left-to-Right on desktop
+      const direction = window.innerWidth < 768 ? 'TB' : 'LR';
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+        initialNodes,
+        initialEdges,
+        direction
+      );
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
+    };
+
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+    return () => window.removeEventListener('resize', updateLayout);
+  }, [setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: any) => setEdges((eds) => addEdge(params, eds)),

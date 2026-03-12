@@ -10,8 +10,12 @@ import {
   Droplets,
   ThermometerSun,
   Building,
+  Flame,
+  HeartPulse,
+  TrendingUp,
 } from "lucide-react";
 import { CITIES, fetchAirQuality, EnvironmentalData } from "../services/api";
+import { generateInsights, Insights } from "../lib/insightEngine";
 import { cn } from "../lib/utils";
 
 import { ModeToggle } from "./ModeToggle";
@@ -97,12 +101,96 @@ const getHeatLabel = (temp: number) => {
   return { text: "Extreme Danger", color: "text-red-500", bg: "bg-red-500/10" };
 };
 
+const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: number, pm10: number) => {
+  const drivers = [];
+  
+  if (humidity > 55) {
+    drivers.push({
+      id: 'humidity',
+      label: "High Humidity",
+      effect: "Heat Stress",
+      value: `+${Math.min(45, Math.round((humidity - 50) * 0.8))}%`,
+      icon: Droplets,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10"
+    });
+  } else if (humidity < 30) {
+    drivers.push({
+      id: 'dry',
+      label: "Extreme Dryness",
+      effect: "Dust Suspension",
+      value: `+${Math.round((30 - humidity) * 1.2)}%`,
+      icon: Wind,
+      color: "text-yellow-500",
+      bg: "bg-yellow-500/10"
+    });
+  }
+
+  if (wind < 12) {
+    drivers.push({
+      id: 'wind',
+      label: "Low Wind Speed",
+      effect: "Pollution Retention",
+      value: `+${Math.min(40, Math.round((12 - wind) * 3.5))}%`,
+      icon: Activity,
+      color: "text-purple-500",
+      bg: "bg-purple-500/10"
+    });
+  }
+
+  if (pm10 > pm25 * 1.5 && pm10 > 30) {
+    drivers.push({
+      id: 'dust',
+      label: "Coarse Dust (PM10)",
+      effect: "AQI Worsening",
+      value: `+${Math.round(((pm10 - pm25) / pm10) * 100)}%`,
+      icon: AlertTriangle,
+      color: "text-orange-500",
+      bg: "bg-orange-500/10"
+    });
+  }
+
+  if (temp > 28) {
+    drivers.push({
+      id: 'uhi',
+      label: "Urban Heat Island",
+      effect: "Nighttime Cooling Loss",
+      value: `+${Math.min(35, 10 + Math.round((temp - 28) * 1.5))}%`,
+      icon: Building,
+      color: "text-slate-500",
+      bg: "bg-slate-500/10"
+    });
+  }
+  
+  // If we don't have enough drivers, add some default ones based on the city
+  if (drivers.length < 2) {
+     drivers.push({
+      id: 'emissions',
+      label: "Traffic Emissions",
+      effect: "Base Pollution",
+      value: `+22%`,
+      icon: Activity,
+      color: "text-red-500",
+      bg: "bg-red-500/10"
+    });
+  }
+
+  return drivers.slice(0, 4);
+};
+
+const STORIES = [
+  { id: 1, title: "Saharan dust plume moving toward West Africa", type: "Dust", icon: Wind, color: "text-orange-500", bg: "bg-orange-500/10" },
+  { id: 2, title: "Major fire cluster detected in DR Congo", type: "Fire", icon: Flame, color: "text-red-500", bg: "bg-red-500/10" },
+  { id: 3, title: "Heatwave intensifying in the Sahel", type: "Heat", icon: ThermometerSun, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+];
+
 export default function DashboardV5() {
   const [selectedCityId, setSelectedCityId] = useState<string>(CITIES[0].id);
   const selectedCity = CITIES.find((c) => c.id === selectedCityId) || CITIES[0];
   const [openCitySelector, setOpenCitySelector] = useState(false);
 
   const [data, setData] = useState<EnvironmentalData | null>(null);
+  const [insights, setInsights] = useState<Insights | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,6 +204,7 @@ export default function DashboardV5() {
         const result = await fetchAirQuality(selectedCity);
         if (mounted) {
           setData(result);
+          setInsights(generateInsights(result.aqi));
         }
       } catch (err) {
         if (mounted) setError("Failed to load environmental data.");
@@ -387,6 +476,33 @@ export default function DashboardV5() {
                 </div>
               </div>
 
+              {/* Today's System Drivers */}
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-bold tracking-tight">Today's System Drivers</h3>
+                </div>
+                <p className="text-sm font-medium text-muted-foreground mb-6">
+                  What's amplifying the environmental stress right now?
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {getSystemDrivers(liveTemp, liveHumidity, liveWind, data.aqi.current.pm2_5, data.aqi.current.pm10).map(driver => (
+                    <div key={driver.id} className="bg-white/50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-white/40 dark:border-zinc-700 flex flex-col justify-between">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={cn("p-2 rounded-xl flex-shrink-0", driver.bg, driver.color)}>
+                          <driver.icon className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground leading-tight">{driver.label}</p>
+                      </div>
+                      <div>
+                        <p className={cn("text-2xl font-light tracking-tighter mb-1", driver.color)}>{driver.value}</p>
+                        <p className="text-sm font-medium">{driver.effect}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Particulate Matter Chart */}
               <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-2">
@@ -397,6 +513,53 @@ export default function DashboardV5() {
                 </p>
                 <PMChart hourlyData={data.aqi.hourly} />
               </div>
+
+              {/* Primary Sources Strip */}
+              <div className="mt-6">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                  Primary Sources & Live Events
+                </h3>
+                <div className="-mx-4 sm:-mx-6 md:mx-0">
+                  <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto px-4 sm:px-6 md:px-0 pb-4 pt-2 hide-scrollbar snap-x">
+                    {STORIES.map(story => (
+                      <div key={story.id} className="w-[280px] md:w-auto flex-shrink-0 snap-start bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-3xl p-4 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-white/50 transition-colors">
+                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0", story.bg, story.color)}>
+                          <story.icon className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">{story.type}</p>
+                          <p className="text-sm font-medium leading-snug">{story.title}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Health Advice */}
+              {insights && (
+                <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={cn(
+                        "p-3 rounded-2xl flex-shrink-0",
+                        insights.color + "/20",
+                        insights.textColor
+                      )}
+                    >
+                      <HeartPulse className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                        Health Advice
+                      </h3>
+                      <p className="text-lg font-medium leading-snug">
+                        {insights.healthImpact}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* SECTION 2: SYSTEMS MAP */}
