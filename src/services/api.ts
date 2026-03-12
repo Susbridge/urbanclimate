@@ -96,6 +96,52 @@ export interface EnvironmentalData {
   };
 }
 
+export async function searchCities(query: string): Promise<City[]> {
+  if (!query || query.length < 2) return [];
+  try {
+    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+    const data = await response.json();
+    if (!data.results) return [];
+    
+    return data.results.map((res: any) => ({
+      id: res.id.toString(),
+      name: res.name,
+      country: res.country || "",
+      lat: res.latitude,
+      lng: res.longitude,
+      timezone: res.timezone || "UTC"
+    }));
+  } catch (error) {
+    console.error("Error searching cities:", error);
+    return [];
+  }
+}
+
+export async function reverseGeocode(lat: number, lng: number): Promise<City> {
+  try {
+    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+    const data = await response.json();
+    return {
+      id: `local-${lat}-${lng}`,
+      name: data.city || data.locality || "Current Location",
+      country: data.countryName || "",
+      lat,
+      lng,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+    };
+  } catch (error) {
+    console.error("Error reverse geocoding:", error);
+    return {
+      id: `local-${lat}-${lng}`,
+      name: "Current Location",
+      country: "",
+      lat,
+      lng,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+    };
+  }
+}
+
 export async function fetchAirQuality(city: City): Promise<EnvironmentalData> {
   // Using Open-Meteo's free Air Quality API
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lng}&current=european_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,carbon_monoxide,sulphur_dioxide&hourly=pm10,pm2_5,european_aqi&timezone=${encodeURIComponent(city.timezone)}&past_days=7`;

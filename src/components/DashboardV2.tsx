@@ -14,7 +14,7 @@ import {
   HeartPulse,
   TrendingUp,
 } from "lucide-react";
-import { CITIES, fetchAirQuality, EnvironmentalData } from "../services/api";
+import { CITIES, fetchAirQuality, EnvironmentalData, searchCities, reverseGeocode, City } from "../services/api";
 import { generateInsights, Insights } from "../lib/insightEngine";
 import { cn } from "../lib/utils";
 
@@ -184,15 +184,50 @@ const STORIES = [
   { id: 3, title: "Heatwave intensifying in the Sahel", type: "Heat", icon: ThermometerSun, color: "text-yellow-500", bg: "bg-yellow-500/10" },
 ];
 
-export default function DashboardV5() {
-  const [selectedCityId, setSelectedCityId] = useState<string>(CITIES[0].id);
-  const selectedCity = CITIES.find((c) => c.id === selectedCityId) || CITIES[0];
+export default function DashboardV2() {
+  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
   const [openCitySelector, setOpenCitySelector] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<City[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const [data, setData] = useState<EnvironmentalData | null>(null);
   const [insights, setInsights] = useState<Insights | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Geolocation on mount
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          const localCity = await reverseGeocode(latitude, longitude);
+          setSelectedCity(localCity);
+        },
+        (error) => {
+          console.warn("Geolocation denied or failed:", error);
+        }
+      );
+    }
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery.length >= 2) {
+        setIsSearching(true);
+        const results = await searchCities(searchQuery);
+        setSearchResults(results);
+        setIsSearching(false);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     let mounted = true;
@@ -251,7 +286,7 @@ export default function DashboardV5() {
       </div>
 
       {/* Header */}
-      <header className="relative z-40 pt-6 pb-12 px-6 flex justify-between items-center max-w-5xl mx-auto">
+      <header className="relative z-40 pt-6 pb-6 px-6 flex justify-between items-center max-w-5xl mx-auto">
         <div className="flex-1 flex items-center gap-2">
           <Globe2 className="w-6 h-6 text-primary" />
           <span className="font-bold tracking-tight text-lg hidden sm:inline-block">Urban Climate Signals</span>
@@ -263,29 +298,56 @@ export default function DashboardV5() {
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-[300px] p-0 rounded-2xl shadow-2xl border-white/60 dark:border-zinc-800/50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-3xl">
-            <Command>
+            <Command shouldFilter={false}>
               <CommandInput
-                placeholder="Search city..."
+                placeholder="Search any city..."
                 className="border-none focus:ring-0"
+                value={searchQuery}
+                onValueChange={setSearchQuery}
               />
               <CommandList>
-                <CommandEmpty>No city found.</CommandEmpty>
-                <CommandGroup>
-                  {CITIES.map((city) => (
-                    <CommandItem
-                      key={city.id}
-                      value={city.name}
-                      onSelect={() => {
-                        setSelectedCityId(city.id);
-                        setOpenCitySelector(false);
-                      }}
-                      className="rounded-xl my-1 cursor-pointer"
-                    >
-                      <MapPin className="mr-2 h-4 w-4 opacity-50" />
-                      {city.name}, {city.country}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                {isSearching && <div className="p-4 text-sm text-center text-muted-foreground">Searching...</div>}
+                {!isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
+                  <CommandEmpty>No city found.</CommandEmpty>
+                )}
+                {!isSearching && searchResults.length === 0 && searchQuery.length < 2 && (
+                  <CommandGroup heading="Major Cities">
+                    {CITIES.map((city) => (
+                      <CommandItem
+                        key={city.id}
+                        value={city.name}
+                        onSelect={() => {
+                          setSelectedCity(city);
+                          setOpenCitySelector(false);
+                          setSearchQuery("");
+                        }}
+                        className="rounded-xl my-1 cursor-pointer"
+                      >
+                        <MapPin className="mr-2 h-4 w-4 opacity-50" />
+                        {city.name}, {city.country}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+                {!isSearching && searchResults.length > 0 && (
+                  <CommandGroup heading="Search Results">
+                    {searchResults.map((city) => (
+                      <CommandItem
+                        key={city.id}
+                        value={`${city.name}-${city.country}`}
+                        onSelect={() => {
+                          setSelectedCity(city);
+                          setOpenCitySelector(false);
+                          setSearchQuery("");
+                        }}
+                        className="rounded-xl my-1 cursor-pointer"
+                      >
+                        <MapPin className="mr-2 h-4 w-4 opacity-50" />
+                        {city.name}{city.country ? `, ${city.country}` : ""}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
               </CommandList>
             </Command>
           </PopoverContent>
@@ -301,6 +363,12 @@ export default function DashboardV5() {
       </header>
 
       <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="mb-12 text-center">
+          <p className="text-lg font-medium text-muted-foreground max-w-3xl mx-auto">
+            Urban Climate Signals explains why cities feel hotter, how pollution builds up, and what policies can improve urban climate conditions.
+          </p>
+        </div>
+
         {loading && (
           <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -324,8 +392,7 @@ export default function DashboardV5() {
             <section className="space-y-8">
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">1</div>
-                  <h2 className="text-3xl font-bold tracking-tight">The Current Reality</h2>
+                  <h2 className="text-3xl font-bold tracking-tight">What's Happening Right Now?</h2>
                 </div>
                 <p className="text-muted-foreground font-medium max-w-2xl text-lg">
                   Real-time environmental conditions in {selectedCity.name}.
@@ -338,7 +405,7 @@ export default function DashboardV5() {
                   <div>
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <ThermometerSun className="w-4 h-4 text-orange-500" /> The "Feels-Like" Reality
+                        <ThermometerSun className="w-4 h-4 text-orange-500" /> How It Feels Outside
                       </h3>
                       <span className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider", getHeatLabel(heatIndex).bg, getHeatLabel(heatIndex).color)}>
                         {getHeatLabel(heatIndex).text}
@@ -416,7 +483,7 @@ export default function DashboardV5() {
                   <div>
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-purple-500" /> The Pollution Feedback Loop
+                        <Activity className="w-4 h-4 text-purple-500" /> Heat and Pollution Interaction
                       </h3>
                       <span className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider", getAQILabel(liveAQI).bg, getAQILabel(liveAQI).color)}>
                         {getAQILabel(liveAQI).text}
@@ -433,7 +500,7 @@ export default function DashboardV5() {
                       </div>
                       <div className="flex-1">
                         <p className="text-lg font-medium leading-relaxed mb-6">
-                          Heat doesn't just feel bad—it actively worsens air quality.
+                          When temperatures rise, pollution can increase. When pollution increases, it can trap more heat.
                         </p>
                       </div>
                     </div>
@@ -480,7 +547,7 @@ export default function DashboardV5() {
               <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm mt-6">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-bold tracking-tight">Today's System Drivers</h3>
+                  <h3 className="text-lg font-bold tracking-tight">What's Making Conditions Worse Today?</h3>
                 </div>
                 <p className="text-sm font-medium text-muted-foreground mb-6">
                   What's amplifying the environmental stress right now?
@@ -517,7 +584,7 @@ export default function DashboardV5() {
               {/* Primary Sources Strip */}
               <div className="mt-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                  Primary Sources & Live Events
+                  Environmental Signals Across the Region
                 </h3>
                 <div className="-mx-4 sm:-mx-6 md:mx-0">
                   <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto px-4 sm:px-6 md:px-0 pb-4 pt-2 hide-scrollbar snap-x">
@@ -566,14 +633,14 @@ export default function DashboardV5() {
             <section className="space-y-8">
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">2</div>
-                  <h2 className="text-3xl font-bold tracking-tight">The Underlying System</h2>
+                  <h2 className="text-3xl font-bold tracking-tight">Why Does This Happen?</h2>
                 </div>
                 <p className="text-muted-foreground font-medium max-w-2xl text-lg">
-                  Why is this happening? Explore how urbanization, climate, and human activity interact to amplify heat stress and worsen air quality.
+                  Cities behave like systems. Temperature, humidity, pollution, and urban infrastructure interact to produce heat stress and air quality outcomes.
                 </p>
               </div>
               <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm">
+                <h3 className="text-xl font-bold tracking-tight mb-6">How the City Climate System Works</h3>
                 <SystemsMap />
               </div>
             </section>
@@ -582,11 +649,10 @@ export default function DashboardV5() {
             <section className="space-y-8">
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">3</div>
-                  <h2 className="text-3xl font-bold tracking-tight">Policy Intervention Simulator</h2>
+                  <h2 className="text-3xl font-bold tracking-tight">What Can Cities Do?</h2>
                 </div>
                 <p className="text-muted-foreground font-medium max-w-2xl text-lg">
-                  What can we do about it? Adjust the levers below to simulate how different urban policies impact the heat index and air quality.
+                  Adjust the levers below to simulate how different urban policies impact the heat index and air quality.
                 </p>
               </div>
               <PolicySimulator baseTemp={liveTemp} baseHumidity={liveHumidity} baseAQI={liveAQI} />
@@ -596,14 +662,16 @@ export default function DashboardV5() {
             <section className="space-y-8">
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">4</div>
-                  <h2 className="text-3xl font-bold tracking-tight">City Sustainability Scorecard</h2>
+                  <h2 className="text-3xl font-bold tracking-tight">City Resilience Outlook</h2>
                 </div>
                 <p className="text-muted-foreground font-medium max-w-2xl text-lg">
                   How well is {selectedCity.name} currently meeting the UN Sustainable Development Goals based on these live environmental signals?
                 </p>
               </div>
-              <SDGTracker aqi={liveAQI} heatIndex={heatIndex} pm25={data.aqi.current.pm2_5} />
+              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm">
+                <h3 className="text-xl font-bold tracking-tight mb-6">City Resilience Scorecard</h3>
+                <SDGTracker aqi={liveAQI} heatIndex={heatIndex} pm25={data.aqi.current.pm2_5} />
+              </div>
             </section>
 
           </div>

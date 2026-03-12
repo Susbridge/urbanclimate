@@ -71,7 +71,7 @@ export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: Pol
     <div className="grid md:grid-cols-12 gap-6">
       {/* Controls Panel */}
       <div className="md:col-span-7 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-8 shadow-sm">
-        <h2 className="text-2xl font-bold tracking-tight mb-8">Policy Levers</h2>
+        <h2 className="text-2xl font-bold tracking-tight mb-8">Actions Cities Can Take</h2>
         
         <div className="space-y-8">
           {/* Tree Cover */}
