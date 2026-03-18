@@ -47,7 +47,7 @@ export const CITIES: City[] = [
   { id: "windhoek", name: "Windhoek", country: "Namibia", lat: -22.5594, lng: 17.0832, timezone: "Africa/Windhoek" },
   { id: "niamey", name: "Niamey", country: "Niger", lat: 13.5116, lng: 2.1254, timezone: "Africa/Niamey" },
   { id: "abuja", name: "Abuja", country: "Nigeria", lat: 9.0765, lng: 7.3986, timezone: "Africa/Lagos" },
-  { id: "lagos", name: "Lagos", country: "Nigeria", lat: 6.4550, lng: 3.3841, timezone: "Africa/Lagos" },
+  { id: "lagos", name: "Lagos", country: "Nigeria", lat: 6.6018, lng: 3.3515, timezone: "Africa/Lagos" },
   { id: "kigali", name: "Kigali", country: "Rwanda", lat: -1.9441, lng: 30.0619, timezone: "Africa/Kigali" },
   { id: "sao-tome", name: "São Tomé", country: "São Tomé & Príncipe", lat: 0.3302, lng: 6.7333, timezone: "Africa/Sao_Tome" },
   { id: "dakar", name: "Dakar", country: "Senegal", lat: 14.7167, lng: -17.4677, timezone: "Africa/Dakar" },

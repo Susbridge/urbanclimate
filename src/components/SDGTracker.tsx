@@ -36,8 +36,12 @@ export default function SDGTracker({ aqi, heatIndex, pm25 }: SDGTrackerProps) {
 
   const calculateSDG11 = () => {
     // AQI Score (0 to 100)
-    // AQI 0 = 100. AQI 50 (Moderate boundary) = 60. AQI 100 (Unhealthy boundary) = 20.
-    const aqiScore = Math.max(0, Math.min(100, 100 - (aqi * 0.8)));
+    // US EPA Scale: 0-50 (Good) = 100-80. 51-100 (Moderate) = 80-60. 101-150 (Sensitive) = 60-30. 150+ = 30-0.
+    let aqiScore = 0;
+    if (aqi <= 50) aqiScore = 100 - (aqi * 0.4); // 50 -> 80
+    else if (aqi <= 100) aqiScore = 80 - ((aqi - 50) * 0.4); // 100 -> 60
+    else if (aqi <= 150) aqiScore = 60 - ((aqi - 100) * 0.6); // 150 -> 30
+    else aqiScore = Math.max(0, 30 - ((aqi - 150) * 0.2)); // 300 -> 0
     
     // Heat Score (0 to 100)
     const heatScore = Math.max(0, Math.min(100, 100 - ((heatIndex - 27) / 12) * 100));

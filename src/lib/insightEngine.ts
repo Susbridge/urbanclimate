@@ -11,7 +11,7 @@ export interface Insights {
 }
 
 export function generateInsights(data: AirQualityData): Insights {
-  const { european_aqi: aqi, pm10, pm2_5, nitrogen_dioxide: no2 } = data.current;
+  const { us_aqi: aqi, pm10, pm2_5, nitrogen_dioxide: no2 } = data.current;
 
   let status = "Good";
   let color = "bg-emerald-500";
@@ -35,11 +35,16 @@ export function generateInsights(data: AirQualityData): Insights {
     color = "bg-red-500";
     textColor = "text-red-500";
     healthImpact = "Everyone may begin to experience health effects; sensitive groups should avoid outdoor exertion.";
-  } else if (aqi > 200) {
-    status = "Very Unhealthy / Hazardous";
+  } else if (aqi > 200 && aqi <= 300) {
+    status = "Very Unhealthy";
     color = "bg-purple-600";
     textColor = "text-purple-600";
-    healthImpact = "Health warnings of emergency conditions. The entire population is more likely to be affected.";
+    healthImpact = "Health alert: The risk of health effects is increased for everyone.";
+  } else if (aqi > 300) {
+    status = "Hazardous";
+    color = "bg-rose-900";
+    textColor = "text-rose-900";
+    healthImpact = "Health warning of emergency conditions: everyone is more likely to be affected.";
   }
 
   const drivers: string[] = [];
