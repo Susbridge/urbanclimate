@@ -38,8 +38,8 @@ export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: Pol
   const calculateAQI = () => {
     let aqi = baseAQI;
     
-    // Generators increase AQI (worse)
-    aqi += (generatorReliance[0] - 80) * 0.8;
+    // Generators increase AQI (worse) - Adjusted for US AQI scale
+    aqi += (generatorReliance[0] - 80) * 1.2;
     
     // Public transit decreases AQI (better, fewer cars)
     aqi -= (publicTransit[0] - 20) * 0.5;
@@ -169,9 +169,13 @@ export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: Pol
           </div>
           
           <div className="mt-6 text-sm font-medium leading-relaxed max-w-[250px]">
-            {simulatedHeatIndex < 40 
+            {simulatedHeatIndex <= 32 
               ? "Significant reduction in heat stress. Safer for outdoor activities." 
-              : "Extreme heat stress remains. High risk of heat exhaustion."}
+              : simulatedHeatIndex <= 39 
+              ? "Moderate heat stress. Use caution during prolonged outdoor exertion."
+              : simulatedHeatIndex <= 51
+              ? "Danger: High risk of heat exhaustion. Limit outdoor activity."
+              : "Extreme Danger: High risk of heatstroke. Avoid outdoor exposure."}
           </div>
         </div>
 
@@ -193,9 +197,15 @@ export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: Pol
           </div>
           
           <div className="mt-6 text-sm font-medium leading-relaxed max-w-[250px]">
-            {simulatedAQI <= 100 
-              ? "Air quality is acceptable. Health risks are minimized." 
-              : "Unhealthy for sensitive groups. Pollution levels remain high."}
+            {simulatedAQI <= 50 
+              ? "Ideal air quality. Health risks are effectively eliminated." 
+              : simulatedAQI <= 100 
+              ? "Acceptable air quality. Most people are not at risk."
+              : simulatedAQI <= 150
+              ? "Moderate risk. Sensitive groups should monitor for symptoms."
+              : simulatedAQI <= 200
+              ? "Unhealthy levels. General public may begin to feel effects."
+              : "Significant health risk. Avoid outdoor exertion."}
           </div>
         </div>
       </div>

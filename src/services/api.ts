@@ -47,6 +47,7 @@ export const CITIES: City[] = [
   { id: "windhoek", name: "Windhoek", country: "Namibia", lat: -22.5594, lng: 17.0832, timezone: "Africa/Windhoek" },
   { id: "niamey", name: "Niamey", country: "Niger", lat: 13.5116, lng: 2.1254, timezone: "Africa/Niamey" },
   { id: "abuja", name: "Abuja", country: "Nigeria", lat: 9.0765, lng: 7.3986, timezone: "Africa/Lagos" },
+  { id: "lagos", name: "Lagos", country: "Nigeria", lat: 6.4550, lng: 3.3841, timezone: "Africa/Lagos" },
   { id: "kigali", name: "Kigali", country: "Rwanda", lat: -1.9441, lng: 30.0619, timezone: "Africa/Kigali" },
   { id: "sao-tome", name: "São Tomé", country: "São Tomé & Príncipe", lat: 0.3302, lng: 6.7333, timezone: "Africa/Sao_Tome" },
   { id: "dakar", name: "Dakar", country: "Senegal", lat: 14.7167, lng: -17.4677, timezone: "Africa/Dakar" },
@@ -68,6 +69,7 @@ export interface AirQualityData {
   current: {
     time: string;
     european_aqi: number;
+    us_aqi: number;
     pm10: number;
     pm2_5: number;
     nitrogen_dioxide: number;
@@ -80,6 +82,7 @@ export interface AirQualityData {
     pm10: number[];
     pm2_5: number[];
     european_aqi: number[];
+    us_aqi: number[];
   };
 }
 
@@ -144,7 +147,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<City> {
 
 export async function fetchAirQuality(city: City): Promise<EnvironmentalData> {
   // Using Open-Meteo's free Air Quality API
-  const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lng}&current=european_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,carbon_monoxide,sulphur_dioxide&hourly=pm10,pm2_5,european_aqi&timezone=${encodeURIComponent(city.timezone)}&past_days=7`;
+  const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lng}&current=european_aqi,us_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,carbon_monoxide,sulphur_dioxide&hourly=pm10,pm2_5,european_aqi,us_aqi&timezone=${encodeURIComponent(city.timezone)}&past_days=7`;
   
   // Using Open-Meteo's free Weather API
   const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,is_day&timezone=${encodeURIComponent(city.timezone)}`;

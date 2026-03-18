@@ -36,7 +36,7 @@ import PMChart from "./PMChart";
 import SDGTracker from "./SDGTracker";
 
 const AQIGauge = ({ aqi, colorClass }: { aqi: number; colorClass: string }) => {
-  const percentage = Math.min((aqi / 300) * 100, 100);
+  const percentage = Math.min((aqi / 500) * 100, 100);
 
   return (
     <svg viewBox="0 0 36 36" className="w-48 h-48 -rotate-90 drop-shadow-2xl">
@@ -92,22 +92,24 @@ const getAQILabel = (aqi: number) => {
   if (aqi <= 100) return { text: "Moderate", color: "text-yellow-500", bg: "bg-yellow-500/10" };
   if (aqi <= 150) return { text: "Unhealthy for Sensitive Groups", color: "text-orange-500", bg: "bg-orange-500/10" };
   if (aqi <= 200) return { text: "Unhealthy", color: "text-red-500", bg: "bg-red-500/10" };
-  return { text: "Very Unhealthy", color: "text-purple-600", bg: "bg-purple-600/10" };
+  if (aqi <= 300) return { text: "Very Unhealthy", color: "text-purple-600", bg: "bg-purple-600/10" };
+  return { text: "Hazardous", color: "text-rose-900", bg: "bg-rose-900/10" };
 };
 
 const getAQIExplanation = (aqi: number) => {
-  if (aqi <= 50) return "Air quality is satisfactory, and air pollution poses little or no risk. Ideal for outdoor activities.";
-  if (aqi <= 100) return "Pollution levels are slightly elevated today. Most people can continue normal outdoor activities, but unusually sensitive people should consider reducing prolonged outdoor exertion.";
-  if (aqi <= 150) return "Air pollution may affect children, older adults, and people with respiratory conditions. The general public is not likely to be affected.";
+  if (aqi <= 50) return "Air quality is satisfactory, and air pollution poses little or no risk.";
+  if (aqi <= 100) return "Air quality is acceptable. However, search for unusually sensitive people who should consider reducing prolonged outdoor exertion.";
+  if (aqi <= 150) return "Members of sensitive groups may experience health effects. The general public is less likely to be affected.";
   if (aqi <= 200) return "Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects.";
-  return "Health warnings of emergency conditions. The entire population is more likely to be affected.";
+  if (aqi <= 300) return "Health alert: The risk of health effects is increased for everyone.";
+  return "Health warning of emergency conditions: everyone is more likely to be affected.";
 };
 
 const getHeatLabel = (temp: number) => {
   if (temp <= 32) return { text: "Safe", color: "text-emerald-500", bg: "bg-emerald-500/10" };
-  if (temp <= 39) return { text: "Extreme Caution", color: "text-yellow-500", bg: "bg-yellow-500/10" };
-  if (temp <= 51) return { text: "Danger", color: "text-orange-500", bg: "bg-orange-500/10" };
-  return { text: "Extreme Danger", color: "text-red-500", bg: "bg-red-500/10" };
+  if (temp <= 39) return { text: "Extreme Caution", color: "text-orange-500", bg: "bg-orange-500/10" };
+  if (temp <= 51) return { text: "Danger", color: "text-red-500", bg: "bg-red-500/10" };
+  return { text: "Extreme Danger", color: "text-rose-900", bg: "bg-rose-900/10" };
 };
 
 const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: number, pm10: number) => {
@@ -118,6 +120,7 @@ const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: nu
       id: 'humidity',
       label: "High Humidity",
       effect: "Heat Stress",
+      whyItMatters: "Heat feels more intense because sweat can't evaporate",
       value: `+${Math.min(45, Math.round((humidity - 50) * 0.8))}%`,
       icon: Droplets,
       color: "text-blue-500",
@@ -128,6 +131,7 @@ const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: nu
       id: 'dry',
       label: "Extreme Dryness",
       effect: "Dust Suspension",
+      whyItMatters: "Dry air allows more dust and particles to stay airborne",
       value: `+${Math.round((30 - humidity) * 1.2)}%`,
       icon: Wind,
       color: "text-yellow-500",
@@ -140,6 +144,7 @@ const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: nu
       id: 'wind',
       label: "Low Wind Speed",
       effect: "Pollution Retention",
+      whyItMatters: "Lack of ventilation keeps pollutants trapped near the ground",
       value: `+${Math.min(40, Math.round((12 - wind) * 3.5))}%`,
       icon: Activity,
       color: "text-purple-500",
@@ -152,6 +157,7 @@ const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: nu
       id: 'dust',
       label: "Coarse Dust (PM10)",
       effect: "AQI Worsening",
+      whyItMatters: "Coarse particles from construction or regional dust irritate lungs",
       value: `+${Math.round(((pm10 - pm25) / pm10) * 100)}%`,
       icon: AlertTriangle,
       color: "text-orange-500",
@@ -164,6 +170,7 @@ const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: nu
       id: 'uhi',
       label: "Urban Heat Island",
       effect: "Nighttime Cooling Loss",
+      whyItMatters: "Buildings absorb heat all day, preventing nighttime cooling",
       value: `+${Math.min(35, 10 + Math.round((temp - 28) * 1.5))}%`,
       icon: Building,
       color: "text-slate-500",
@@ -177,6 +184,7 @@ const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: nu
       id: 'emissions',
       label: "Traffic Emissions",
       effect: "Base Pollution",
+      whyItMatters: "Exhaust from vehicles directly lowers neighborhood air quality",
       value: `+22%`,
       icon: Activity,
       color: "text-red-500",
@@ -267,7 +275,7 @@ export default function DashboardV3() {
   const liveTemp = data?.weather.current.temperature_2m || 0;
   const liveHumidity = data?.weather.current.relative_humidity_2m || 0;
   const liveWind = data?.weather.current.wind_speed_10m || 0;
-  const liveAQI = data?.aqi.current.european_aqi || 0;
+  const liveAQI = data?.aqi.current.us_aqi || 0;
   
   const heatIndex = calculateHeatIndex(liveTemp, liveHumidity);
 
@@ -292,7 +300,7 @@ export default function DashboardV3() {
         <div
           className={cn(
             "absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-20 dark:opacity-10 transition-colors duration-1000",
-            getBlobColor(liveAQI + 20),
+            getBlobColor(liveAQI),
           )}
         />
       </div>
@@ -431,15 +439,15 @@ export default function DashboardV3() {
                       </div>
                       <span className="text-3xl sm:text-4xl font-light text-muted-foreground/30">→</span>
                       <div className="text-center">
-                        <span className="text-5xl sm:text-6xl font-light tracking-tighter text-red-500">{heatIndex}°</span>
-                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-red-500 mt-2">Feels Like</p>
+                        <span className={cn("text-5xl sm:text-6xl font-light tracking-tighter", getHeatLabel(heatIndex).color)}>{heatIndex}°</span>
+                        <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mt-2", getHeatLabel(heatIndex).color)}>Feels Like</p>
                       </div>
                     </div>
 
                     <p className="text-lg font-medium leading-relaxed mb-6">
-                      Why does {liveTemp}°C feel like {heatIndex}°C today?
+                      How is your body experiencing {selectedCity.name} today?
                     </p>
-                    
+
                     <ul className="space-y-4">
                       {liveHumidity > 60 && (
                         <li className="flex gap-3 items-start">
@@ -447,20 +455,12 @@ export default function DashboardV3() {
                             <Droplets className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">High Humidity ({liveHumidity}%)</p>
-                            <p className="text-sm font-medium leading-snug">Coastal moisture prevents sweat from evaporating, trapping heat against your body.</p>
-                          </div>
-                        </li>
-                      )}
-                      
-                      {liveHumidity <= 40 && liveTemp > 30 && (
-                        <li className="flex gap-3 items-start">
-                          <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500 flex-shrink-0">
-                            <ThermometerSun className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">Dry Heat & Radiation</p>
-                            <p className="text-sm font-medium leading-snug">Low humidity combined with intense solar radiation creates a harsh, baking environment.</p>
+                            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                              Stifling Moisture ({liveHumidity}%)
+                            </p>
+                            <p className="text-sm font-medium leading-snug">
+                              High humidity is slowing sweat evaporation, making it feel hotter against your skin.
+                            </p>
                           </div>
                         </li>
                       )}
@@ -470,8 +470,12 @@ export default function DashboardV3() {
                           <Building className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">Urban Heat Island</p>
-                          <p className="text-sm font-medium leading-snug">Concrete and asphalt absorb heat during the day and release it slowly at night, preventing cooling.</p>
+                          <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                            Urban Trapped Heat
+                          </p>
+                          <p className="text-sm font-medium leading-snug">
+                            Heat trapped in buildings and roads is raising local temperatures even after the sun goes down.
+                          </p>
                         </div>
                       </li>
 
@@ -481,8 +485,12 @@ export default function DashboardV3() {
                             <Wind className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">Low Wind Speed ({liveWind} km/h)</p>
-                            <p className="text-sm font-medium leading-snug">Stagnant air prevents the dispersal of heat and traps pollutants near the surface.</p>
+                            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                              Heavy, Still Air
+                            </p>
+                            <p className="text-sm font-medium leading-snug">
+                              Stagnant air is preventing cooling and making the heat feel more constant.
+                            </p>
                           </div>
                         </li>
                       )}
@@ -501,8 +509,8 @@ export default function DashboardV3() {
                             <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
                           </PopoverTrigger>
                           <PopoverContent className="w-64 text-sm p-4 rounded-xl shadow-xl border-white/60 dark:border-zinc-800/50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl">
-                            <p className="font-bold mb-1">What is AQI?</p>
-                            <p className="text-muted-foreground">The Air Quality Index measures how polluted the air is based on fine particles and gases. Higher values indicate greater health risk.</p>
+                            <p className="font-bold mb-1">What is AQI (US)?</p>
+                            <p className="text-muted-foreground">The US Air Quality Index (EPA standard) measures pollution on a scale of 0-500. Higher values indicate greater health risk.</p>
                           </PopoverContent>
                         </Popover>
                       </h3>
@@ -524,10 +532,12 @@ export default function DashboardV3() {
                           {getAQIExplanation(liveAQI)}
                         </p>
                         
-                        <div className="pt-6 border-t border-black/5 dark:border-white/5 text-left">
-                          <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">Today's Drivers</p>
-                          <p className="text-base font-medium text-foreground/80 capitalize">
-                            {driverLabels}
+                        <div className="pt-6 border-t border-black/5 dark:border-white/5 text-center px-4">
+                          <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1 underline decoration-primary/30 underline-offset-4">Health Suggestion</p>
+                          <p className="text-sm font-medium text-foreground/70">
+                            {liveAQI > 100 
+                              ? "People with respiratory issues should consider avoiding strenuous outdoor activities today."
+                              : "The air is generally safe for physical activity, though sensitive groups might want to stay aware."}
                           </p>
                         </div>
                       </div>
@@ -577,7 +587,7 @@ export default function DashboardV3() {
               {/* Primary Sources Strip */}
               <div className="mt-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                  Environmental Signals Across the Region
+                  Regional events influencing today’s conditions
                 </h3>
                 <div className="-mx-4 sm:-mx-6 md:mx-0">
                   <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto px-4 sm:px-6 md:px-0 pb-4 pt-2 hide-scrollbar snap-x">
@@ -602,15 +612,16 @@ export default function DashboardV3() {
             <section className="space-y-8">
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <h2 className="text-3xl font-bold tracking-tight">Why Does This Happen?</h2>
+                  <h2 className="text-3xl font-bold tracking-tight">How the City Climate System Works</h2>
                 </div>
                 <p className="text-muted-foreground font-medium max-w-2xl text-lg">
-                  Cities behave like systems. When temperatures rise, pollution can increase. When pollution increases, it can trap more heat. Temperature, humidity, pollution, and urban infrastructure interact to produce heat stress and air quality outcomes.
+                  These factors interact to shape temperature, air quality, and heat stress. When temperatures rise, pollution can increase. When pollution increases, it can trap more heat.
                 </p>
               </div>
               <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm">
-                <h3 className="text-lg sm:text-xl font-bold tracking-tight mb-6">How the City Climate System Works</h3>
-                <SystemsMap />
+                <div className="min-h-[600px]">
+                  <SystemsMap />
+                </div>
               </div>
             </section>
 
@@ -642,6 +653,20 @@ export default function DashboardV3() {
                 <SDGTracker aqi={liveAQI} heatIndex={heatIndex} pm25={data.aqi.current.pm2_5} />
               </div>
             </section>
+            
+            {/* FOOTER / DATA SOURCES */}
+            <footer className="pt-24 pb-12 border-t border-black/5 dark:border-white/5 text-center">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-4">Data Transparency</p>
+              <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground max-w-2xl mx-auto px-6">
+                <p>
+                  Environmental data is provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open-Meteo</a>. 
+                  AQI is calculated using the <strong>United States EPA standard</strong> based on CAMS Global and European modeling.
+                </p>
+                <p className="opacity-70">
+                  Global models are <strong>coordinate-specific</strong> and may vary between precise geolocation and general city-center search results. Local factors like neighborhood elevation and traffic density also affect ground-level readings.
+                </p>
+              </div>
+            </footer>
 
           </div>
         )}

@@ -12,38 +12,51 @@ interface SDGTrackerProps {
 export default function SDGTracker({ aqi, heatIndex, pm25 }: SDGTrackerProps) {
   // --- SDG 3: Good Health and Well-being ---
   // Target 3.9: Substantially reduce the number of deaths and illnesses from hazardous chemicals and air, water and soil pollution.
-  // Calculation: Based heavily on PM2.5 (WHO 24h guideline is 15 µg/m³) and Heat Index.
   const calculateSDG3 = () => {
     // PM2.5 Score (0 to 100)
-    // 15 µg/m³ or less = 100. 75 µg/m³ or more = 0.
-    const pm25Score = Math.max(0, Math.min(100, 100 - ((pm25 - 15) / 60) * 100));
+    // WHO 24h guideline is 15. We want to penalize starting much earlier.
+    // 5 µg/m³ = 100. 15 µg/m³ = 60. 30 µg/m³ (Unhealthy) = 0.
+    const pm25Score = Math.max(0, Math.min(100, 100 - ((pm25 - 5) / 25) * 100));
     
     // Heat Score (0 to 100)
-    // 27°C or less = 100. 41°C or more = 0.
-    const heatScore = Math.max(0, Math.min(100, 100 - ((heatIndex - 27) / 14) * 100));
+    // 27°C = 100. 32°C (Caution) = 70. 39°C (Danger) = 0.
+    const heatScore = Math.max(0, Math.min(100, 100 - ((heatIndex - 27) / 12) * 100));
 
-    // Weight: PM2.5 is a chronic/acute health killer (60%), Heat is acute (40%)
-    return Math.round((pm25Score * 0.6) + (heatScore * 0.4));
+    // Weight: 60% PM2.5, 40% Heat
+    const rawScore = (pm25Score * 0.6) + (heatScore * 0.4);
+    
+    // Final score penalized if either is low (Lowest-factor impact)
+    const lowest = Math.min(pm25Score, heatScore);
+    return {
+      total: Math.round(rawScore * 0.7 + lowest * 0.3),
+      pm25Score: Math.round(pm25Score),
+      heatScore: Math.round(heatScore)
+    };
   };
 
-  // --- SDG 11: Sustainable Cities and Communities ---
-  // Target 11.6: Reduce the adverse per capita environmental impact of cities, including by paying special attention to air quality.
-  // Calculation: Based on overall AQI (which includes PM10, NO2, O3) and Urban Heat Island effect.
   const calculateSDG11 = () => {
     // AQI Score (0 to 100)
-    // AQI 50 or less = 100. AQI 200 or more = 0.
-    const aqiScore = Math.max(0, Math.min(100, 100 - ((aqi - 50) / 150) * 100));
+    // AQI 0 = 100. AQI 50 (Moderate boundary) = 60. AQI 100 (Unhealthy boundary) = 20.
+    const aqiScore = Math.max(0, Math.min(100, 100 - (aqi * 0.8)));
     
     // Heat Score (0 to 100)
-    // 27°C or less = 100. 41°C or more = 0.
-    const heatScore = Math.max(0, Math.min(100, 100 - ((heatIndex - 27) / 14) * 100));
+    const heatScore = Math.max(0, Math.min(100, 100 - ((heatIndex - 27) / 12) * 100));
 
-    // Weight: Overall urban air quality (50%), Urban Heat Island (50%)
-    return Math.round((aqiScore * 0.5) + (heatScore * 0.5));
+    // Weight: 50% AQI, 50% Heat
+    const rawScore = (aqiScore * 0.5) + (heatScore * 0.5);
+    const lowest = Math.min(aqiScore, heatScore);
+    
+    return {
+      total: Math.round(rawScore * 0.7 + lowest * 0.3),
+      aqiScore: Math.round(aqiScore),
+      heatScore: Math.round(heatScore)
+    };
   };
 
-  const sdg3Score = calculateSDG3();
-  const sdg11Score = calculateSDG11();
+  const sdg3 = calculateSDG3();
+  const sdg11 = calculateSDG11();
+  const sdg3Score = sdg3.total;
+  const sdg11Score = sdg11.total;
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-emerald-500";
@@ -100,11 +113,26 @@ export default function SDGTracker({ aqi, heatIndex, pm25 }: SDGTrackerProps) {
             <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">/ 100</span>
           </div>
 
-          <div className="w-full h-2 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden mb-6">
+          <div className="w-full h-2 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden mb-4">
             <div 
               className={cn("h-full rounded-full transition-all duration-1000", getScoreBg(sdg3Score))} 
               style={{ width: `${sdg3Score}%` }}
             />
+          </div>
+
+          <div className="flex gap-4 mb-6 pt-2 border-t border-black/5 dark:border-white/5">
+            <div className="flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">PM2.5 Score</p>
+              <div className="flex items-center gap-2">
+                <span className={cn("text-lg font-bold", getScoreColor(sdg3.pm25Score))}>{sdg3.pm25Score}%</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Heat Score</p>
+              <div className="flex items-center gap-2">
+                <span className={cn("text-lg font-bold", getScoreColor(sdg3.heatScore))}>{sdg3.heatScore}%</span>
+              </div>
+            </div>
           </div>
 
           <p className="text-sm font-medium leading-relaxed text-muted-foreground">
@@ -156,11 +184,26 @@ export default function SDGTracker({ aqi, heatIndex, pm25 }: SDGTrackerProps) {
             <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">/ 100</span>
           </div>
 
-          <div className="w-full h-2 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden mb-6">
+          <div className="w-full h-2 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden mb-4">
             <div 
               className={cn("h-full rounded-full transition-all duration-1000", getScoreBg(sdg11Score))} 
               style={{ width: `${sdg11Score}%` }}
             />
+          </div>
+
+          <div className="flex gap-4 mb-6 pt-2 border-t border-black/5 dark:border-white/5">
+            <div className="flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">AQI Score</p>
+              <div className="flex items-center gap-2">
+                <span className={cn("text-lg font-bold", getScoreColor(sdg11.aqiScore))}>{sdg11.aqiScore}%</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Heat Score</p>
+              <div className="flex items-center gap-2">
+                <span className={cn("text-lg font-bold", getScoreColor(sdg11.heatScore))}>{sdg11.heatScore}%</span>
+              </div>
+            </div>
           </div>
 
           <p className="text-sm font-medium leading-relaxed text-muted-foreground">

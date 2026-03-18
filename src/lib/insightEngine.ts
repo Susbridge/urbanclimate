@@ -16,8 +16,10 @@ export function generateInsights(data: AirQualityData): Insights {
   let status = "Good";
   let color = "bg-emerald-500";
   let textColor = "text-emerald-500";
-  let healthImpact = "Air quality is satisfactory. Enjoy outdoor activities.";
-  
+  let healthImpact = pm2_5 >= 15
+    ? "Generally good, but PM2.5 levels are creeping up. Sensitive groups (asthma, elderly, pregnancy) should monitor for symptoms."
+    : "Air quality is satisfactory. Enjoy outdoor activities.";
+
   if (aqi > 50 && aqi <= 100) {
     status = "Moderate";
     color = "bg-yellow-500";
@@ -41,18 +43,18 @@ export function generateInsights(data: AirQualityData): Insights {
   }
 
   const drivers: string[] = [];
-  
+
   // Logic to determine likely sources (simplified heuristic for MVP)
   if (pm10 > pm2_5 * 1.8 && pm10 > 40) {
     drivers.push("Harmattan / Saharan Dust Transport");
     drivers.push("Unpaved Road Dust");
   }
-  
+
   if (no2 > 30) {
     drivers.push("Heavy Traffic Congestion");
     drivers.push("Diesel Generator Emissions");
   }
-  
+
   if (pm2_5 > 35 && no2 < 20) {
     drivers.push("Biomass & Waste Burning");
     drivers.push("Regional Haze");
