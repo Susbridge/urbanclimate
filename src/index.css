@@ -101,3 +101,44 @@ body {
     scrollbar-width: none;
   }
 }
+/* React Flow Custom Controls Styling */
+.custom-flow-controls {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.dark .custom-flow-controls {
+  background-color: rgba(24, 24, 27, 0.8) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.custom-flow-controls button {
+  background-color: white !important;
+  border-bottom: 1px solid #f4f4f5 !important;
+  transition: background-color 0.2s !important;
+}
+
+.dark .custom-flow-controls button {
+  background-color: #18181b !important;
+  border-bottom: 1px solid #27272a !important;
+}
+
+.custom-flow-controls button:hover {
+  background-color: #f9fafb !important;
+}
+
+.dark .custom-flow-controls button:hover {
+  background-color: #27272a !important;
+}
+
+.custom-flow-controls button svg {
+  fill: #3f3f46 !important;
+}
+
+.dark .custom-flow-controls button svg {
+  fill: #d4d4d8 !important;
+}

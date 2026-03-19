@@ -180,7 +180,7 @@ export default function SystemsMap() {
         className="bg-transparent [&_.react-flow__attribution]:hidden"
       >
         <Background color="#888" gap={16} size={1} />
-        <Controls className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-none shadow-lg rounded-xl overflow-hidden [&_.react-flow__controls-button]:!bg-white dark:[&_.react-flow__controls-button]:!bg-zinc-900 [&_.react-flow__controls-button]:!border-zinc-200 dark:[&_.react-flow__controls-button]:!border-zinc-800 [&_.react-flow__controls-button_svg]:!fill-zinc-700 dark:[&_.react-flow__controls-button_svg]:!fill-zinc-300 hover:[&_.react-flow__controls-button]:!bg-zinc-50 dark:hover:[&_.react-flow__controls-button]:!bg-zinc-800" />
+        <Controls className="custom-flow-controls" />
       </ReactFlow>
     </div>
   );
