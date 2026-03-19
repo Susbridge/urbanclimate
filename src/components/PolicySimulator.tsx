@@ -113,7 +113,7 @@ export default function PolicySimulator({ selectedCity, baseTemp, baseHumidity, 
                 )}
               />
             </div>
-            <p className="text-xs text-muted-foreground font-medium italic">
+            <p className="text-xs text-muted-foreground font-medium">
               {isDieselRelevant 
                 ? "Reducing reliance improves local air quality significantly."
                 : `Backup diesel power is not a major source of pollution in ${selectedCity.name}.`}
