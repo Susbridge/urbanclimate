@@ -65,6 +65,27 @@ export const CITIES: City[] = [
   { id: "harare", name: "Harare", country: "Zimbabwe", lat: -17.8216, lng: 31.0492, timezone: "Africa/Harare" }
 ];
 
+function normalizeKey(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['’]/g, "")
+    .replace(/\s+/g, "-")
+    .trim();
+}
+
+function findCuratedCity(name?: string, country?: string): City | undefined {
+  if (!name) return undefined;
+  const nameKey = normalizeKey(name);
+  const countryKey = country ? normalizeKey(country) : "";
+
+  const matches = CITIES.filter((c) => normalizeKey(c.name) === nameKey);
+  if (matches.length === 0) return undefined;
+  if (!countryKey) return matches[0];
+  return matches.find((c) => normalizeKey(c.country) === countryKey) ?? matches[0];
+}
+
 export interface AirQualityData {
   current: {
     time: string;
@@ -99,6 +120,13 @@ export interface EnvironmentalData {
   };
 }
 
+const AIR_QUALITY_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+const airQualityCache = new Map<string, { timestamp: number; data: EnvironmentalData }>();
+
+function getCityCacheKey(city: City): string {
+  return `${city.id}|${city.lat.toFixed(4)}|${city.lng.toFixed(4)}|${city.timezone}`;
+}
+
 export async function searchCities(query: string): Promise<City[]> {
   if (!query || query.length < 2) return [];
   try {
@@ -107,16 +135,16 @@ export async function searchCities(query: string): Promise<City[]> {
     if (!data.results) return [];
     
     const results = data.results.map((res: any) => {
+      const curatedCity = findCuratedCity(res.name, res.country);
+      if (curatedCity) return curatedCity;
+
       const cityId = res.id.toString();
-      // Use curated coordinates if they exist in our CITIES list
-      const curatedCity = CITIES.find(c => c.id === res.name.toLowerCase().replace(/\s+/g, '-') || c.id === cityId);
-      
       return {
         id: cityId,
         name: res.name,
         country: res.country || "",
-        lat: curatedCity ? curatedCity.lat : res.latitude,
-        lng: curatedCity ? curatedCity.lng : res.longitude,
+        lat: res.latitude,
+        lng: res.longitude,
         timezone: res.timezone || "UTC"
       };
     });
@@ -132,6 +160,13 @@ export async function fetchLocationByIP(): Promise<City> {
   try {
     const response = await fetch('https://ipapi.co/json/');
     const data = await response.json();
+    
+    // Check city name first, then fallback to region (Lagos State -> Lagos)
+    const curatedCity = findCuratedCity(data.city, data.country_name) || 
+                        findCuratedCity(data.region, data.country_name);
+                        
+    if (curatedCity) return curatedCity;
+
     return {
       id: `ip-${data.city}-${data.country_code}`,
       name: data.city || "Current Location",
@@ -150,9 +185,16 @@ export async function reverseGeocode(lat: number, lng: number): Promise<City> {
   try {
     const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
     const data = await response.json();
+    const name = data.city || data.locality;
+    
+    // Check city/locality first, then fallback to subdivision (Lagos State -> Lagos)
+    const curatedCity = findCuratedCity(name, data.countryName) || 
+                        findCuratedCity(data.principalSubdivision, data.countryName);
+
+    if (curatedCity) return curatedCity;
     return {
       id: `local-${lat}-${lng}`,
-      name: data.city || data.locality || "Current Location",
+      name: name || "Current Location",
       country: data.countryName || "",
       lat,
       lng,
@@ -172,6 +214,12 @@ export async function reverseGeocode(lat: number, lng: number): Promise<City> {
 }
 
 export async function fetchAirQuality(city: City): Promise<EnvironmentalData> {
+  const cacheKey = getCityCacheKey(city);
+  const cached = airQualityCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < AIR_QUALITY_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   // Using Open-Meteo's free Air Quality API
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lng}&current=european_aqi,us_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,carbon_monoxide,sulphur_dioxide&hourly=pm10,pm2_5,european_aqi,us_aqi&timezone=${encodeURIComponent(city.timezone)}&past_days=7`;
   
@@ -190,8 +238,11 @@ export async function fetchAirQuality(city: City): Promise<EnvironmentalData> {
   const aqiData = await aqiResponse.json();
   const weatherData = await weatherResponse.json();
 
-  return {
+  const result = {
     aqi: aqiData,
     weather: weatherData
   };
+
+  airQualityCache.set(cacheKey, { timestamp: Date.now(), data: result });
+  return result;
 }
