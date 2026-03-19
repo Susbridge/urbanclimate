@@ -450,11 +450,11 @@ export default function DashboardV3() {
             
             {/* SECTION 1: LIVE DATA */}
             <section className="space-y-8">
-              <div>
+              <div className="flex flex-col items-center text-center">
                 <div className="flex items-center gap-3 mb-3">
                   <h2 className="text-3xl font-bold tracking-tight">What's Happening Right Now?</h2>
                 </div>
-                <p className="text-muted-foreground font-medium max-w-2xl text-lg">
+                <p className="text-muted-foreground font-medium max-w-2xl text-lg mx-auto">
                   Real-time environmental conditions in {selectedCity.name}.
                 </p>
               </div>
@@ -650,11 +650,11 @@ export default function DashboardV3() {
 
             {/* SECTION 2: SYSTEMS MAP */}
             <section className="space-y-8">
-              <div>
+              <div className="flex flex-col items-center text-center">
                 <div className="flex items-center gap-3 mb-3">
                   <h2 className="text-3xl font-bold tracking-tight">How the City Climate System Works</h2>
                 </div>
-                <p className="text-muted-foreground font-medium max-w-2xl text-lg">
+                <p className="text-muted-foreground font-medium max-w-2xl text-lg mx-auto">
                   These factors interact to shape temperature, air quality, and heat stress. When temperatures rise, pollution can increase. When pollution increases, it can trap more heat.
                 </p>
               </div>
@@ -674,11 +674,11 @@ export default function DashboardV3() {
 
             {/* SECTION 3: POLICY SIMULATOR */}
             <section className="space-y-8">
-              <div>
+              <div className="flex flex-col items-center text-center">
                 <div className="flex items-center gap-3 mb-3">
                   <h2 className="text-3xl font-bold tracking-tight">What Can Cities Do?</h2>
                 </div>
-                <p className="text-muted-foreground font-medium max-w-2xl text-lg">
+                <p className="text-muted-foreground font-medium max-w-2xl text-lg mx-auto">
                   Adjust the levers below to simulate how different urban policies impact the heat index and air quality.
                 </p>
               </div>
@@ -687,11 +687,11 @@ export default function DashboardV3() {
 
             {/* SECTION 4: SDG IMPACT TRACKER */}
             <section className="space-y-8">
-              <div>
+              <div className="flex flex-col items-center text-center">
                 <div className="flex items-center gap-3 mb-3">
                   <h2 className="text-3xl font-bold tracking-tight">City Resilience Outlook</h2>
                 </div>
-                <p className="text-muted-foreground font-medium max-w-2xl text-lg">
+                <p className="text-muted-foreground font-medium max-w-2xl text-lg mx-auto">
                   How well is {selectedCity.name} currently meeting the UN Sustainable Development Goals based on these live environmental signals?
                 </p>
               </div>
