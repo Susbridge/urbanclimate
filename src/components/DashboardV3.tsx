@@ -330,12 +330,12 @@ export default function DashboardV3() {
                 {!isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
                   <CommandEmpty>No city found.</CommandEmpty>
                 )}
-                {!isSearching && searchResults.length === 0 && searchQuery.length < 2 && (
+                {!isSearching && (
                   <CommandGroup heading="Major Cities">
-                    {CITIES.map((city) => (
+                    {CITIES.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((city) => (
                       <CommandItem
                         key={city.id}
-                        value={city.name}
+                        value={`${city.name}-${city.country}`}
                         onSelect={() => {
                           setSelectedCity(city);
                           setOpenCitySelector(false);

@@ -106,14 +106,22 @@ export async function searchCities(query: string): Promise<City[]> {
     const data = await response.json();
     if (!data.results) return [];
     
-    return data.results.map((res: any) => ({
-      id: res.id.toString(),
-      name: res.name,
-      country: res.country || "",
-      lat: res.latitude,
-      lng: res.longitude,
-      timezone: res.timezone || "UTC"
-    }));
+    const results = data.results.map((res: any) => {
+      const cityId = res.id.toString();
+      // Use curated coordinates if they exist in our CITIES list
+      const curatedCity = CITIES.find(c => c.id === res.name.toLowerCase().replace(/\s+/g, '-') || c.id === cityId);
+      
+      return {
+        id: cityId,
+        name: res.name,
+        country: res.country || "",
+        lat: curatedCity ? curatedCity.lat : res.latitude,
+        lng: curatedCity ? curatedCity.lng : res.longitude,
+        timezone: res.timezone || "UTC"
+      };
+    });
+    
+    return results;
   } catch (error) {
     console.error("Error searching cities:", error);
     return [];
