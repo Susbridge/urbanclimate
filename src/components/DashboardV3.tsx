@@ -302,7 +302,7 @@ export default function DashboardV3() {
   const driverLabels = currentDrivers.map(d => d.label.toLowerCase()).join(" • ");
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground font-sans pb-12 relative overflow-hidden transition-colors duration-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground font-sans pb-16 relative overflow-hidden transition-colors duration-500">
       {/* Dynamic Ambient Background */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div
@@ -702,10 +702,10 @@ export default function DashboardV3() {
             </section>
             
             {/* FOOTER / DATA TRANSPARENCY */}
-            <footer className="pt-12 pb-12 border-t border-black/5 dark:border-white/10 text-center">
+            <footer className="-mt-8 pt-16 pb-0 border-t border-black/5 dark:border-white/10 text-center">
               <div className="max-w-4xl mx-auto px-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-6">Data Transparency & Standards</p>
-                <div className="grid md:grid-cols-2 gap-8 text-left text-sm text-muted-foreground/80 leading-relaxed mb-8">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-8">Data Transparency & Standards</p>
+                <div className="grid md:grid-cols-2 gap-8 text-left text-sm text-muted-foreground/80 leading-relaxed mb-16">
                   <div className="space-y-4">
                     <p>
                       <strong className="text-foreground/90">Unified Air Quality Standard:</strong> All environmental signals are unified under the <strong>United States EPA AQI Standard</strong> (0-500) to ensure consistent global comparison, powered by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open-Meteo</a>'s CAMS modeling.
@@ -724,7 +724,7 @@ export default function DashboardV3() {
                   </div>
                 </div>
                 
-                <div className="pt-8 border-t border-black/5 dark:border-white/5">
+                <div className="pt-16 border-t border-black/5 dark:border-white/5">
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3">Credit</p>
                   <p className="text-sm font-medium">
                     A project by <a href="https://susbridge.xyz" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold transition-all">Susbridge</a>
