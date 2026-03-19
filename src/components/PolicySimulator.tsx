@@ -2,56 +2,56 @@ import React, { useState } from 'react';
 import { Slider } from './ui/slider';
 import { cn } from '../lib/utils';
 import { Activity, AlertTriangle, Building, Leaf, Zap, Bus } from 'lucide-react';
+import { City } from '../services/api';
 
 interface PolicySimulatorProps {
+  selectedCity: City;
   baseTemp: number;
   baseHumidity: number;
   baseAQI: number;
 }
 
-export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: PolicySimulatorProps) {
+const dieselRelevantCountries = [
+  "Nigeria", "Ghana", "Cameroon", "Angola", "Benin", "Burkina Faso", 
+  "Chad", "DR Congo", "Congo Republic", "Côte d'Ivoire", "Equatorial Guinea",
+  "Gabon", "Gambia", "Guinea", "Guinea-Bissau", "Liberia", "Mali", "Niger",
+  "Senegal", "Sierra Leone", "Togo", "Sudan", "South Sudan", "Kenya", 
+  "Uganda", "Tanzania", "Ethiopia"
+];
+
+export default function PolicySimulator({ selectedCity, baseTemp, baseHumidity, baseAQI }: PolicySimulatorProps) {
+  const isDieselRelevant = dieselRelevantCountries.includes(selectedCity.country);
+
   // Sliders state
   const [treeCover, setTreeCover] = useState([10]); // Percentage
-  const [generatorReliance, setGeneratorReliance] = useState([80]); // Percentage
+  const [generatorReliance, setGeneratorReliance] = useState([isDieselRelevant ? 80 : 0]); // 0 if not relevant
   const [publicTransit, setPublicTransit] = useState([20]); // Percentage
   const [concreteDensity, setConcreteDensity] = useState([75]); // Percentage
 
   // Simple heuristic math model for simulation
-  // Heat Index calculation (simplified for demonstration)
   const calculateHeatIndex = () => {
-    // Base feels like calculation (simplified)
-    // If temp is low, heat index isn't really a factor, but we'll use a simple offset for the demo
     let feelsLike = baseTemp;
     if (baseTemp >= 27 && baseHumidity >= 40) {
-      feelsLike = baseTemp + ((baseHumidity - 40) * 0.1); // Extremely simplified baseline
+      feelsLike = baseTemp + ((baseHumidity - 40) * 0.1);
     }
-    
-    // Concrete density increases heat island effect
     feelsLike += (concreteDensity[0] - 75) * 0.05;
-    
-    // Tree cover reduces heat island effect
     feelsLike -= (treeCover[0] - 10) * 0.1;
-    
     return Math.max(baseTemp, Math.round(feelsLike * 10) / 10);
   };
 
   const calculateAQI = () => {
     let aqi = baseAQI;
-    
-    // Generators increase AQI (worse) - Adjusted for US AQI scale
-    aqi += (generatorReliance[0] - 80) * 1.2;
-    
-    // Public transit decreases AQI (better, fewer cars)
+    if (isDieselRelevant) {
+      aqi += (generatorReliance[0] - 80) * 1.2;
+    }
     aqi -= (publicTransit[0] - 20) * 0.5;
-    
-    // Concrete density (urbanization) slightly increases AQI
     aqi += (concreteDensity[0] - 75) * 0.2;
-    
     return Math.max(20, Math.round(aqi));
   };
 
   const simulatedHeatIndex = calculateHeatIndex();
   const simulatedAQI = calculateAQI();
+
 
   const getAQIColor = (aqi: number) => {
     if (aqi <= 50) return "text-emerald-500";
@@ -93,21 +93,31 @@ export default function PolicySimulator({ baseTemp, baseHumidity, baseAQI }: Pol
           </div>
 
           {/* Generator Reliance */}
-          <div className="space-y-4">
+          <div className={cn("space-y-4 transition-opacity duration-500", !isDieselRelevant && "opacity-40")}>
             <div className="flex justify-between items-center">
               <label className="text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
-                <Zap className="w-4 h-4 text-yellow-500" /> Diesel Generator Reliance
+                <Zap className={cn("w-4 h-4", isDieselRelevant ? "text-yellow-500" : "text-muted-foreground")} /> Diesel Generator Reliance
               </label>
-              <span className="font-bold text-lg">{generatorReliance[0]}%</span>
+              {isDieselRelevant && <span className="font-bold text-lg">{generatorReliance[0]}%</span>}
             </div>
-            <Slider 
-              value={generatorReliance} 
-              onValueChange={setGeneratorReliance} 
-              max={100} 
-              step={1}
-              className="[&_[role=slider]]:border-yellow-500 [&_.absolute]:bg-yellow-500"
-            />
-            <p className="text-xs text-muted-foreground font-medium">Reducing reliance improves local air quality significantly.</p>
+            <div className={cn(!isDieselRelevant && "pointer-events-none")}>
+              <Slider 
+                value={generatorReliance} 
+                onValueChange={isDieselRelevant ? setGeneratorReliance : undefined} 
+                max={100} 
+                step={1}
+                className={cn(
+                  isDieselRelevant 
+                    ? "[&_[role=slider]]:border-yellow-500 [&_.absolute]:bg-yellow-500" 
+                    : "[&_[role=slider]]:border-muted-foreground/30 [&_.absolute]:bg-muted-foreground/20"
+                )}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground font-medium italic">
+              {isDieselRelevant 
+                ? "Reducing reliance improves local air quality significantly."
+                : `Backup diesel power is not a major source of pollution in ${selectedCity.name}.`}
+            </p>
           </div>
 
           {/* Public Transit */}

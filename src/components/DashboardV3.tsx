@@ -682,7 +682,7 @@ export default function DashboardV3() {
                   Adjust the levers below to simulate how different urban policies impact the heat index and air quality.
                 </p>
               </div>
-              <PolicySimulator baseTemp={liveTemp} baseHumidity={liveHumidity} baseAQI={liveAQI} />
+              <PolicySimulator selectedCity={selectedCity} baseTemp={liveTemp} baseHumidity={liveHumidity} baseAQI={liveAQI} />
             </section>
 
             {/* SECTION 4: SDG IMPACT TRACKER */}
