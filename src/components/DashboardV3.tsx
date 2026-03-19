@@ -15,7 +15,7 @@ import {
   TrendingUp,
   Info,
 } from "lucide-react";
-import { CITIES, fetchAirQuality, EnvironmentalData, searchCities, reverseGeocode, City } from "../services/api";
+import { CITIES, fetchAirQuality, EnvironmentalData, searchCities, reverseGeocode, fetchLocationByIP, City } from "../services/api";
 import { generateInsights, Insights } from "../lib/insightEngine";
 import { cn } from "../lib/utils";
 
@@ -214,20 +214,33 @@ export default function DashboardV3() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Geolocation on mount
+  // Initial location detection
   useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          const localCity = await reverseGeocode(latitude, longitude);
-          setSelectedCity(localCity);
-        },
-        (error) => {
-          console.warn("Geolocation denied or failed:", error);
-        }
-      );
+    async function detectLocation() {
+      // 1. Try IP-based geolocation first (No permission required)
+      try {
+        const ipCity = await fetchLocationByIP();
+        setSelectedCity(ipCity);
+      } catch (err) {
+        console.warn("IP Geolocation failed:", err);
+      }
+
+      // 2. Try browser geolocation for better accuracy (Optional)
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            const localCity = await reverseGeocode(latitude, longitude);
+            setSelectedCity(localCity);
+          },
+          (error) => {
+            console.warn("Browser Geolocation denied or failed:", error);
+          }
+        );
+      }
     }
+
+    detectLocation();
   }, []);
 
   // Debounced search
@@ -351,21 +364,23 @@ export default function DashboardV3() {
                 )}
                 {!isSearching && searchResults.length > 0 && (
                   <CommandGroup heading="Search Results">
-                    {searchResults.map((city) => (
-                      <CommandItem
-                        key={city.id}
-                        value={`${city.name}-${city.country}`}
-                        onSelect={() => {
-                          setSelectedCity(city);
-                          setOpenCitySelector(false);
-                          setSearchQuery("");
-                        }}
-                        className="rounded-xl my-1 cursor-pointer"
-                      >
-                        <MapPin className="mr-2 h-4 w-4 opacity-50" />
-                        {city.name}{city.country ? `, ${city.country}` : ""}
-                      </CommandItem>
-                    ))}
+                    {searchResults
+                      .filter(searchCity => !CITIES.some(c => c.name === searchCity.name && c.country === searchCity.country))
+                      .map((city) => (
+                        <CommandItem
+                          key={city.id}
+                          value={`${city.name}-${city.country}`}
+                          onSelect={() => {
+                            setSelectedCity(city);
+                            setOpenCitySelector(false);
+                            setSearchQuery("");
+                          }}
+                          className="rounded-xl my-1 cursor-pointer"
+                        >
+                          <MapPin className="mr-2 h-4 w-4 opacity-50" />
+                          {city.name}{city.country ? `, ${city.country}` : ""}
+                        </CommandItem>
+                      ))}
                   </CommandGroup>
                 )}
               </CommandList>
@@ -374,9 +389,16 @@ export default function DashboardV3() {
         </Popover>
         <div className="flex-1 flex justify-end items-center gap-4">
           {!loading && localTime && (
-            <span className="text-sm font-medium text-muted-foreground bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full">
-              {localTime}
-            </span>
+            <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mr-1">Live</span>
+              <span className="text-sm font-medium text-muted-foreground border-l border-black/10 dark:border-white/10 pl-2">
+                {localTime}
+              </span>
+            </div>
           )}
           <ModeToggle />
         </div>

@@ -128,6 +128,24 @@ export async function searchCities(query: string): Promise<City[]> {
   }
 }
 
+export async function fetchLocationByIP(): Promise<City> {
+  try {
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    return {
+      id: `ip-${data.city}-${data.country_code}`,
+      name: data.city || "Current Location",
+      country: data.country_name || "",
+      lat: data.latitude,
+      lng: data.longitude,
+      timezone: data.timezone || "UTC"
+    };
+  } catch (error) {
+    console.error("Error fetching location by IP:", error);
+    throw error;
+  }
+}
+
 export async function reverseGeocode(lat: number, lng: number): Promise<City> {
   try {
     const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
