@@ -6,8 +6,8 @@
 
 import React, { useState, useEffect } from "react";
 import DashboardV3 from "./components/DashboardV3";
-import DesignLabs from "./pages/DesignLabs";
 import { ThemeProvider } from "./components/ThemeProvider";
+import MobileSystemMapOptions from "./components/MobileSystemMapOptions";
 
 export default function App() {
   return (
