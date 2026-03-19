@@ -302,7 +302,7 @@ export default function DashboardV3() {
   const driverLabels = currentDrivers.map(d => d.label.toLowerCase()).join(" • ");
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground font-sans pb-32 relative overflow-hidden transition-colors duration-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground font-sans pb-12 relative overflow-hidden transition-colors duration-500">
       {/* Dynamic Ambient Background */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div
@@ -702,7 +702,7 @@ export default function DashboardV3() {
             </section>
             
             {/* FOOTER / DATA TRANSPARENCY */}
-            <footer className="pt-24 pb-12 border-t border-black/5 dark:border-white/10 text-center">
+            <footer className="pt-24 pb-6 border-t border-black/5 dark:border-white/10 text-center">
               <div className="max-w-4xl mx-auto px-6">
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-6">Data Transparency & Standards</p>
                 <div className="grid md:grid-cols-2 gap-8 text-left text-sm text-muted-foreground/80 leading-relaxed mb-12">
