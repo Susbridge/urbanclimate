@@ -1,6 +1,7 @@
 export interface City {
   id: string;
   name: string;
+  admin1?: string;
   country: string;
   lat: number;
   lng: number;
@@ -130,18 +131,16 @@ function getCityCacheKey(city: City): string {
 export async function searchCities(query: string): Promise<City[]> {
   if (!query || query.length < 2) return [];
   try {
-    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`);
     const data = await response.json();
     if (!data.results) return [];
     
     const results = data.results.map((res: any) => {
-      const curatedCity = findCuratedCity(res.name, res.country);
-      if (curatedCity) return curatedCity;
-
       const cityId = res.id.toString();
       return {
         id: cityId,
         name: res.name,
+        admin1: res.admin1 || "",
         country: res.country || "",
         lat: res.latitude,
         lng: res.longitude,
@@ -161,10 +160,9 @@ export async function fetchLocationByIP(): Promise<City> {
     const response = await fetch('https://ipapi.co/json/');
     const data = await response.json();
     
-    // Check city name first, then fallback to region (Lagos State -> Lagos)
     const curatedCity = findCuratedCity(data.city, data.country_name) || 
                         findCuratedCity(data.region, data.country_name);
-                        
+                         
     if (curatedCity) return curatedCity;
 
     return {
@@ -187,7 +185,6 @@ export async function reverseGeocode(lat: number, lng: number): Promise<City> {
     const data = await response.json();
     const name = data.city || data.locality;
     
-    // Check city/locality first, then fallback to subdivision (Lagos State -> Lagos)
     const curatedCity = findCuratedCity(name, data.countryName) || 
                         findCuratedCity(data.principalSubdivision, data.countryName);
 
@@ -220,10 +217,7 @@ export async function fetchAirQuality(city: City): Promise<EnvironmentalData> {
     return cached.data;
   }
 
-  // Using Open-Meteo's free Air Quality API
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lng}&current=european_aqi,us_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,carbon_monoxide,sulphur_dioxide&hourly=pm10,pm2_5,european_aqi,us_aqi&timezone=${encodeURIComponent(city.timezone)}&past_days=7`;
-  
-  // Using Open-Meteo's free Weather API
   const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,is_day&timezone=${encodeURIComponent(city.timezone)}`;
   
   const [aqiResponse, weatherResponse] = await Promise.all([
