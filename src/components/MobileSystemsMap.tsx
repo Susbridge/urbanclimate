@@ -1,80 +1,62 @@
 import React from 'react';
 import { cn } from '../lib/utils';
 import { 
-  Activity, Wind, ThermometerSun, Building, Leaf, 
-  Zap, AlertTriangle
+  Building, Leaf, Wind
 } from 'lucide-react';
 
-const CHAINS = [
-  {
-    title: "Urban Development Loop",
-    steps: [
-      { label: "Urbanization", icon: Building, color: "text-slate-500" },
-      { label: "Increases", type: "effect" },
-      { label: "Heat Island", icon: ThermometerSun, color: "text-orange-500" },
-      { label: "Worsens", type: "effect" },
-      { label: "Heat Index", icon: Activity, color: "text-red-500" }
+const CATEGORIES = [
+  { 
+    name: "Drivers", 
+    icon: Building, 
+    color: "text-slate-500",
+    items: [
+      { name: "Urbanization", tags: ["Increases Heat", "Traps Pollution"], desc: "More buildings and roads absorb heat and slow down air movement, keeping pollution near the ground." },
+      { name: "Diesel Generators", tags: ["Worsens Air"], desc: "Local emissions from backup power increase PM2.5 levels regardless of regional weather." }
     ]
   },
-  {
-    title: "Energy & Air Quality",
-    steps: [
-      { label: "Urbanization", icon: Building, color: "text-slate-500" },
-      { label: "Drives", type: "effect" },
-      { label: "Generator Use", icon: Zap, color: "text-yellow-500" },
-      { label: "Pollutes", type: "effect" },
-      { label: "Air Quality", icon: AlertTriangle, color: "text-purple-500" }
+  { 
+    name: "Mitigators", 
+    icon: Leaf, 
+    color: "text-emerald-500",
+    items: [
+      { name: "Tree Cover", tags: ["Cools Air", "Improves Air"], desc: "Trees provide shade and evaporative cooling while filtering particulate matter from the air." }
     ]
   },
-  {
-    title: "Natural Mitigation",
-    steps: [
-      { label: "Tree Cover", icon: Leaf, color: "text-emerald-500" },
-      { label: "Decreases", type: "positive" },
-      { label: "Surface Heat", icon: ThermometerSun, color: "text-orange-500" },
-      { label: "Improves", type: "positive" },
-      { label: "Heat Index", icon: Activity, color: "text-red-500" }
-    ]
-  },
-  {
-    title: "Climate Dynamics",
-    steps: [
-      { label: "Wind Speed", icon: Wind, color: "text-cyan-500" },
-      { label: "Disperses", type: "positive" },
-      { label: "Pollutants", icon: AlertTriangle, color: "text-purple-500" },
-      { label: "Improves", type: "positive" },
-      { label: "Air Quality", icon: Activity, color: "text-emerald-500" }
+  { 
+    name: "Climate Factors", 
+    icon: Wind, 
+    color: "text-cyan-500",
+    items: [
+      { name: "Wind Speed", tags: ["Disperses Heat", "Clears Air"], desc: "Stronger winds help move hot air out of city canyons and disperse accumulated pollutants." }
     ]
   }
 ];
 
 export default function MobileSystemsMap() {
   return (
-    <div className="space-y-6">
-      {CHAINS.map((chain, i) => (
-        <div key={i} className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">{chain.title}</p>
-          <div className="flex flex-col gap-3">
-            {chain.steps.map((step, j) => (
-              <React.Fragment key={j}>
-                {step.type ? (
-                  <div className="flex justify-center py-1">
-                    <div className={cn(
-                      "text-[9px] font-black uppercase px-3 py-1 rounded-full border",
-                      step.type === "effect" ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+    <div className="space-y-8">
+      {CATEGORIES.map((cat, i) => (
+        <div key={i} className="space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <cat.icon className={cn("w-4 h-4", cat.color)} />
+            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{cat.name}</h4>
+          </div>
+          <div className="space-y-3">
+            {cat.items.map((item, j) => (
+              <div key={j} className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl border border-white/60 dark:border-zinc-800/50 rounded-2xl p-5 shadow-sm">
+                <h5 className="text-sm font-bold mb-3">{item.name}</h5>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {item.tags.map((tag, k) => (
+                    <span key={k} className={cn(
+                      "text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tighter whitespace-nowrap",
+                      tag.includes("Increases") || tag.includes("Worsens") || tag.includes("Traps") ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
                     )}>
-                      {step.label}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 bg-white/20 dark:bg-black/20 rounded-2xl p-3 border border-white/40 dark:border-white/5">
-                    <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-zinc-800 shadow-sm", step.color)}>
-                      {step.icon && <step.icon className="w-5 h-5" />}
-                    </div>
-                    <span className="text-sm font-bold">{step.label}</span>
-                  </div>
-                )}
-              </React.Fragment>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+              </div>
             ))}
           </div>
         </div>

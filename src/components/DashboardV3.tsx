@@ -31,6 +31,7 @@ import {
 } from "./ui/command";
 
 import SystemsMap from "./SystemsMap";
+import MobileSystemsMap from "./MobileSystemsMap";
 import PolicySimulator from "./PolicySimulator";
 import PMChart from "./PMChart";
 import SDGTracker from "./SDGTracker";
@@ -640,10 +641,17 @@ export default function DashboardV3() {
                   These factors interact to shape temperature, air quality, and heat stress. When temperatures rise, pollution can increase. When pollution increases, it can trap more heat.
                 </p>
               </div>
-              <div className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm">
+              
+              {/* Desktop: Interactive Map */}
+              <div className="hidden md:block bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-[32px] p-6 sm:p-8 shadow-sm">
                 <div className="min-h-[600px]">
                   <SystemsMap />
                 </div>
+              </div>
+
+              {/* Mobile: Static Cards */}
+              <div className="md:hidden">
+                <MobileSystemsMap />
               </div>
             </section>
 

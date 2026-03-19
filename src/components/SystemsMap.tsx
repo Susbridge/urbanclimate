@@ -134,23 +134,30 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => 
   return { nodes: layoutedNodes, edges };
 };
 
-import MobileSystemsMap from './MobileSystemsMap';
-
 export default function SystemsMap() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { theme } = useTheme();
 
+  // Determine actual theme if 'auto' is selected
   const isDark = theme === 'dark' || (theme === 'auto' && (new Date().getHours() < 7 || new Date().getHours() >= 19));
 
   useEffect(() => {
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-      initialNodes,
-      initialEdges,
-      'LR'
-    );
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
+    const updateLayout = () => {
+      // Use Top-to-Bottom on mobile, Left-to-Right on desktop
+      const direction = window.innerWidth < 768 ? 'TB' : 'LR';
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+        initialNodes,
+        initialEdges,
+        direction
+      );
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
+    };
+
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+    return () => window.removeEventListener('resize', updateLayout);
   }, [setNodes, setEdges]);
 
   const onConnect = useCallback(
@@ -159,30 +166,22 @@ export default function SystemsMap() {
   );
 
   return (
-    <>
-      {/* Desktop Version: Interactive React Flow */}
-      <div className="hidden md:block w-full h-[600px] rounded-[32 * 1px] overflow-hidden border border-white/60 dark:border-zinc-800/50 bg-white/20 dark:bg-zinc-900/20 backdrop-blur-2xl shadow-sm">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-          colorMode={isDark ? 'dark' : 'light'}
-          proOptions={{ hideAttribution: true }}
-          className="bg-transparent [&_.react-flow__attribution]:hidden"
-        >
-          <Background color="#888" gap={16} size={1} />
-          <Controls className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-none shadow-lg rounded-xl overflow-hidden [&_.react-flow__controls-button]:!bg-white dark:[&_.react-flow__controls-button]:!bg-zinc-900 [&_.react-flow__controls-button]:!border-zinc-200 dark:[&_.react-flow__controls-button]:!border-zinc-800 [&_.react-flow__controls-button_svg]:!fill-zinc-700 dark:[&_.react-flow__controls-button_svg]:!fill-zinc-300 hover:[&_.react-flow__controls-button]:!bg-zinc-50 dark:hover:[&_.react-flow__controls-button]:!bg-zinc-800" />
-        </ReactFlow>
-      </div>
-
-      {/* Mobile Version: Static Causal Chains */}
-      <div className="md:hidden w-full">
-        <MobileSystemsMap />
-      </div>
-    </>
+    <div className="w-full h-[600px] rounded-[32px] overflow-hidden border border-white/60 dark:border-zinc-800/50 bg-white/20 dark:bg-zinc-900/20 backdrop-blur-2xl shadow-sm">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        fitView
+        colorMode={isDark ? 'dark' : 'light'}
+        proOptions={{ hideAttribution: true }}
+        className="bg-transparent [&_.react-flow__attribution]:hidden"
+      >
+        <Background color="#888" gap={16} size={1} />
+        <Controls className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-none shadow-lg rounded-xl overflow-hidden [&_.react-flow__controls-button]:!bg-white dark:[&_.react-flow__controls-button]:!bg-zinc-900 [&_.react-flow__controls-button]:!border-zinc-200 dark:[&_.react-flow__controls-button]:!border-zinc-800 [&_.react-flow__controls-button_svg]:!fill-zinc-700 dark:[&_.react-flow__controls-button_svg]:!fill-zinc-300 hover:[&_.react-flow__controls-button]:!bg-zinc-50 dark:hover:[&_.react-flow__controls-button]:!bg-zinc-800" />
+      </ReactFlow>
+    </div>
   );
 }
