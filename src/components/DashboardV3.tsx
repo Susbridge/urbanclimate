@@ -217,7 +217,7 @@ export default function DashboardV3() {
   // Initial location detection
   useEffect(() => {
     async function detectLocation() {
-      // 1. Try IP-based geolocation first (No permission required)
+      // 1. Try IP-based geolocation first (No permission required, immediate result)
       try {
         const ipCity = await fetchLocationByIP();
         setSelectedCity(ipCity);
@@ -225,7 +225,7 @@ export default function DashboardV3() {
         console.warn("IP Geolocation failed:", err);
       }
 
-      // 2. Try browser geolocation for better accuracy (Optional)
+      // 2. Try browser geolocation for better accuracy (Optional, triggers popup)
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
