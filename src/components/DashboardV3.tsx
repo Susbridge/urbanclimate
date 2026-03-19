@@ -320,54 +320,35 @@ export default function DashboardV3() {
       </div>
 
       {/* Header */}
-      <header className="relative z-40 pt-6 pb-6 px-6 flex justify-between items-center max-w-5xl mx-auto">
-        <div className="flex-1 flex items-center gap-2">
+      <header className="relative z-40 pt-6 pb-6 px-6 flex justify-between items-start max-w-5xl mx-auto">
+        <div className="flex-1 flex items-center gap-2 pt-1">
           <Globe2 className="w-6 h-6 text-primary" />
           <span className="font-bold tracking-tight text-lg hidden sm:inline-block">Urban Climate Signals</span>
         </div>
-        <Popover open={openCitySelector} onOpenChange={setOpenCitySelector}>
-          <PopoverTrigger asChild>
-            <button className="flex items-center gap-2 text-xl font-semibold tracking-tight hover:opacity-70 transition-opacity">
-              {selectedCity.name} <ChevronDown className="w-5 h-5 opacity-50" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-0 rounded-2xl shadow-2xl border-white/60 dark:border-zinc-800/50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-3xl">
-            <Command shouldFilter={false}>
-              <CommandInput
-                placeholder="Search any city..."
-                className="border-none focus:ring-0"
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-              />
-              <CommandList>
-                {isSearching && <div className="p-4 text-sm text-center text-muted-foreground">Searching...</div>}
-                {!isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
-                  <CommandEmpty>No city found.</CommandEmpty>
-                )}
-                {!isSearching && (
-                  <CommandGroup heading="Major Cities">
-                    {CITIES.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((city) => (
-                      <CommandItem
-                        key={city.id}
-                        value={`${city.name}-${city.country}`}
-                        onSelect={() => {
-                          setSelectedCity(city);
-                          setOpenCitySelector(false);
-                          setSearchQuery("");
-                        }}
-                        className="rounded-xl my-1 cursor-pointer"
-                      >
-                        <MapPin className="mr-2 h-4 w-4 opacity-50" />
-                        {city.name}, {city.country}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-                {!isSearching && searchResults.length > 0 && (
-                  <CommandGroup heading="Search Results">
-                    {searchResults
-                      .filter(searchCity => !CITIES.some(c => c.name === searchCity.name && c.country === searchCity.country))
-                      .map((city) => (
+        
+        <div className="flex flex-col items-center gap-2">
+          <Popover open={openCitySelector} onOpenChange={setOpenCitySelector}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 text-xl font-semibold tracking-tight hover:opacity-70 transition-opacity">
+                {selectedCity.name} <ChevronDown className="w-5 h-5 opacity-50" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0 rounded-2xl shadow-2xl border-white/60 dark:border-zinc-800/50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-3xl overflow-hidden">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Search any city..."
+                  className="border-none focus:ring-0"
+                  value={searchQuery}
+                  onValueChange={setSearchQuery}
+                />
+                <CommandList>
+                  {isSearching && <div className="p-4 text-sm text-center text-muted-foreground">Searching...</div>}
+                  {!isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
+                    <CommandEmpty>No city found.</CommandEmpty>
+                  )}
+                  {!isSearching && (
+                    <CommandGroup heading="Major Cities">
+                      {CITIES.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((city) => (
                         <CommandItem
                           key={city.id}
                           value={`${city.name}-${city.country}`}
@@ -379,18 +360,54 @@ export default function DashboardV3() {
                           className="rounded-xl my-1 cursor-pointer"
                         >
                           <MapPin className="mr-2 h-4 w-4 opacity-50" />
-                          {city.name}{city.country ? `, ${city.country}` : ""}
+                          {city.name}, {city.country}
                         </CommandItem>
                       ))}
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+                    </CommandGroup>
+                  )}
+                  {!isSearching && searchResults.length > 0 && (
+                    <CommandGroup heading="Search Results">
+                      {searchResults
+                        .filter(searchCity => !CITIES.some(c => c.name === searchCity.name && c.country === searchCity.country))
+                        .map((city) => (
+                          <CommandItem
+                            key={city.id}
+                            value={`${city.name}-${city.country}`}
+                            onSelect={() => {
+                              setSelectedCity(city);
+                              setOpenCitySelector(false);
+                              setSearchQuery("");
+                            }}
+                            className="rounded-xl my-1 cursor-pointer"
+                          >
+                            <MapPin className="mr-2 h-4 w-4 opacity-50" />
+                            {city.name}{city.country ? `, ${city.country}` : ""}
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {!loading && localTime && (
+            <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full border border-black/5 dark:border-white/5 md:hidden">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mr-1">Live</span>
+              <span className="text-[10px] font-medium text-muted-foreground border-l border-black/10 dark:border-white/10 pl-2">
+                {localTime}
+              </span>
+            </div>
+          )}
+        </div>
+
         <div className="flex-1 flex justify-end items-center gap-4">
           {!loading && localTime && (
-            <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full">
+            <div className="hidden md:flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -613,9 +630,9 @@ export default function DashboardV3() {
                   Regional events influencing today’s conditions
                 </h3>
                 <div className="-mx-4 sm:-mx-6 md:mx-0">
-                  <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto px-4 sm:px-6 md:px-0 pb-4 pt-2 hide-scrollbar snap-x">
+                  <div className="flex flex-col md:grid md:grid-cols-3 gap-4 px-4 sm:px-6 md:px-0">
                     {STORIES.map(story => (
-                      <div key={story.id} className="w-[280px] md:w-auto flex-shrink-0 snap-start bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-3xl p-4 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-white/50 transition-colors">
+                      <div key={story.id} className="w-full flex-shrink-0 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-3xl p-4 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-white/50 transition-colors">
                         <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0", story.bg, story.color)}>
                           <story.icon className="w-6 h-6" />
                         </div>

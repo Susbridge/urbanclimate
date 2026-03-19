@@ -39,23 +39,23 @@ export default function MobileSystemsMap() {
         <div key={i} className="space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <cat.icon className={cn("w-4 h-4", cat.color)} />
-            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{cat.name}</h4>
+            <h4 className="text-[12px] font-bold uppercase tracking-wider text-muted-foreground">{cat.name}</h4>
           </div>
           <div className="space-y-3">
             {cat.items.map((item, j) => (
               <div key={j} className="bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl border border-white/60 dark:border-zinc-800/50 rounded-2xl p-5 shadow-sm">
-                <h5 className="text-sm font-bold mb-3">{item.name}</h5>
+                <h5 className="text-[14px] font-bold mb-3">{item.name}</h5>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {item.tags.map((tag, k) => (
                     <span key={k} className={cn(
-                      "text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tighter whitespace-nowrap",
+                      "text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-normal whitespace-nowrap",
                       tag.includes("Increases") || tag.includes("Worsens") || tag.includes("Traps") ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
                     )}>
                       {tag}
                     </span>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                <p className="text-[14px] text-muted-foreground leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
