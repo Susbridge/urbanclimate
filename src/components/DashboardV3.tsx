@@ -701,17 +701,35 @@ export default function DashboardV3() {
               </div>
             </section>
             
-            {/* FOOTER / DATA SOURCES */}
-            <footer className="pt-24 pb-12 border-t border-black/5 dark:border-white/5 text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-4">Data Transparency</p>
-              <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground max-w-2xl mx-auto px-6">
-                <p>
-                  Environmental data is provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open-Meteo</a>. 
-                  AQI is calculated using the <strong>United States EPA standard</strong> based on CAMS Global and European modeling.
-                </p>
-                <p className="opacity-70">
-                  Global models are <strong>coordinate-specific</strong> and may vary between precise geolocation and general city-center search results. Local factors like neighborhood elevation and traffic density also affect ground-level readings.
-                </p>
+            {/* FOOTER / DATA TRANSPARENCY */}
+            <footer className="pt-24 pb-12 border-t border-black/5 dark:border-white/10 text-center">
+              <div className="max-w-4xl mx-auto px-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-6">Data Transparency & Standards</p>
+                <div className="grid md:grid-cols-2 gap-8 text-left text-sm text-muted-foreground/80 leading-relaxed mb-12">
+                  <div className="space-y-4">
+                    <p>
+                      <strong className="text-foreground/90">Unified Air Quality Standard:</strong> All environmental signals are unified under the <strong>United States EPA AQI Standard</strong> (0-500) to ensure consistent global comparison, powered by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open-Meteo</a>'s CAMS modeling.
+                    </p>
+                    <p>
+                      <strong className="text-foreground/90">Representative Geolocation:</strong> We use curated coordinates for major urban centers (e.g., Ikeja for Lagos) to provide the most representative readings for city residents, rather than generic city-center averages.
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    <p>
+                      <strong className="text-foreground/90">Zero-Permission Privacy:</strong> Initial city detection uses <strong>privacy-first IP geolocation</strong>. This allows the app to show relevant local data immediately without requiring explicit browser location permissions.
+                    </p>
+                    <p>
+                      <strong className="text-foreground/90">Model Variability:</strong> Atmospheric models are coordinate-specific. While highly accurate for regional trends, ground-level readings may vary based on hyper-local factors like immediate traffic density or micro-elevations.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="pt-8 border-t border-black/5 dark:border-white/5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3">Credit</p>
+                  <p className="text-sm font-medium">
+                    A project by <a href="https://susbridge.xyz" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold transition-all">Susbridge</a>
+                  </p>
+                </div>
               </div>
             </footer>
 
