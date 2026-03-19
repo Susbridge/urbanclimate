@@ -290,8 +290,6 @@ export default function DashboardV3() {
   const liveHumidity = data?.weather.current.relative_humidity_2m || 0;
   const liveWind = data?.weather.current.wind_speed_10m || 0;
   const liveAQI = data?.aqi.current.us_aqi || 0;
-  const livePM10 = data?.aqi.current.pm10 || 0;
-  const livePM25 = data?.aqi.current.pm2_5 || 0;
   
   const heatIndex = calculateHeatIndex(liveTemp, liveHumidity);
 
@@ -577,25 +575,14 @@ export default function DashboardV3() {
                           {getAQIExplanation(liveAQI)}
                         </p>
                         
-                         <div className="pt-6 border-t border-black/5 dark:border-white/5 text-center px-4">
-                           {livePM10 > 150 && livePM10 > livePM25 * 2 && (
-                             <div className="mb-4 p-3 rounded-2xl bg-orange-500/5 border border-orange-500/10 text-left">
-                               <div className="flex items-center gap-2 mb-1 text-orange-600 dark:text-orange-400">
-                                 <Wind className="w-3.5 h-3.5" />
-                                 <span className="text-[10px] font-bold uppercase tracking-wider">Dust Event Detected</span>
-                               </div>
-                               <p className="text-xs font-medium leading-snug text-foreground/80">
-                                 High PM10 levels suggest a regional dust plume or Harmattan conditions are the primary driver of today's poor air quality.
-                               </p>
-                             </div>
-                           )}
-                           <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1 underline decoration-primary/30 underline-offset-4">Health Suggestion</p>
-                           <p className="text-sm font-medium text-foreground/70">
-                             {liveAQI > 100 
-                               ? "People with respiratory issues should consider avoiding strenuous outdoor activities today."
-                               : "The air is generally safe for physical activity, though sensitive groups might want to stay aware."}
-                           </p>
-                         </div>
+                        <div className="pt-6 border-t border-black/5 dark:border-white/5 text-center px-4">
+                          <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1 underline decoration-primary/30 underline-offset-4">Health Suggestion</p>
+                          <p className="text-sm font-medium text-foreground/70">
+                            {liveAQI > 100 
+                              ? "People with respiratory issues should consider avoiding strenuous outdoor activities today."
+                              : "The air is generally safe for physical activity, though sensitive groups might want to stay aware."}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
