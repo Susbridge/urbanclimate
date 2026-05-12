@@ -16,7 +16,7 @@ import {
   Info,
 } from "lucide-react";
 import { CITIES, fetchAirQuality, EnvironmentalData, searchCities, reverseGeocode, fetchLocationByIP, City } from "../services/api";
-import { generateInsights, Insights } from "../lib/insightEngine";
+import { generateInsights, generateAIInsights, Insights, AIInsights } from "../lib/insightEngine";
 import { cn } from "../lib/utils";
 
 import { ModeToggle } from "./ModeToggle";
@@ -196,11 +196,44 @@ const getSystemDrivers = (temp: number, humidity: number, wind: number, pm25: nu
   return drivers.slice(0, 4);
 };
 
-const STORIES = [
-  { id: 1, title: "Saharan dust plume moving toward West Africa", type: "Dust", icon: Wind, color: "text-orange-500", bg: "bg-orange-500/10" },
-  { id: 2, title: "Major fire cluster detected in DR Congo", type: "Fire", icon: Flame, color: "text-red-500", bg: "bg-red-500/10" },
-  { id: 3, title: "Heatwave intensifying in the Sahel", type: "Heat", icon: ThermometerSun, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-];
+function getConditionStories(city: City, data: EnvironmentalData, aiEvents?: { title: string; type: string }[]) {
+  const { pm10, pm2_5, nitrogen_dioxide: no2 } = data.aqi.current;
+  const temp = data.weather.current.temperature_2m;
+  const stories: { id: number; title: string; type: string; icon: React.ElementType; color: string; bg: string }[] = [];
+
+  // AI-generated events take priority if available
+  if (aiEvents && aiEvents.length > 0) {
+    const iconMap: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
+      Dust:    { icon: Wind,          color: "text-orange-500", bg: "bg-orange-500/10" },
+      Fire:    { icon: Flame,         color: "text-red-500",    bg: "bg-red-500/10" },
+      Heat:    { icon: ThermometerSun,color: "text-yellow-500", bg: "bg-yellow-500/10" },
+      Traffic: { icon: Activity,      color: "text-purple-500", bg: "bg-purple-500/10" },
+      Air:     { icon: Wind,          color: "text-blue-500",   bg: "bg-blue-500/10" },
+    };
+    return aiEvents.slice(0, 3).map((ev, i) => {
+      const meta = iconMap[ev.type] ?? iconMap["Air"];
+      return { id: i + 1, title: ev.title, type: ev.type, ...meta };
+    });
+  }
+
+  // Condition-driven fallback
+  if (pm10 > pm2_5 * 1.8 && pm10 > 40) {
+    stories.push({ id: 1, title: `Elevated dust transport detected over ${city.name}`, type: "Dust", icon: Wind, color: "text-orange-500", bg: "bg-orange-500/10" });
+  }
+  if (temp > 34) {
+    stories.push({ id: 2, title: `Heat stress conditions developing in ${city.name}`, type: "Heat", icon: ThermometerSun, color: "text-yellow-500", bg: "bg-yellow-500/10" });
+  }
+  if (pm2_5 > 35 && no2 < 20) {
+    stories.push({ id: 3, title: `Biomass or waste burning smoke detected near ${city.name}`, type: "Fire", icon: Flame, color: "text-red-500", bg: "bg-red-500/10" });
+  }
+  if (no2 > 30) {
+    stories.push({ id: stories.length + 1, title: `Elevated traffic emissions recorded in ${city.name}`, type: "Traffic", icon: Activity, color: "text-purple-500", bg: "bg-purple-500/10" });
+  }
+  if (stories.length === 0) {
+    stories.push({ id: 1, title: `Air quality monitoring active in ${city.name}, ${city.country}`, type: "Air", icon: Activity, color: "text-emerald-500", bg: "bg-emerald-500/10" });
+  }
+  return stories.slice(0, 3);
+}
 
 export default function DashboardV3() {
   const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
@@ -212,6 +245,7 @@ export default function DashboardV3() {
 
   const [data, setData] = useState<EnvironmentalData | null>(null);
   const [insights, setInsights] = useState<Insights | null>(null);
+  const [aiInsights, setAIInsights] = useState<AIInsights | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -266,12 +300,17 @@ export default function DashboardV3() {
     async function loadData() {
       setLoading(true);
       setError(null);
+      setAIInsights(null);
       try {
         const result = await fetchAirQuality(selectedCity);
         if (mounted) {
           setData(result);
-          setInsights(generateInsights(result.aqi));
+          setInsights(generateInsights(result.aqi, selectedCity));
         }
+        // Kick off AI insights asynchronously — UI shows rule-based immediately
+        generateAIInsights(result, selectedCity).then((ai) => {
+          if (mounted && ai) setAIInsights(ai);
+        });
       } catch (err) {
         if (mounted) setError("Failed to load environmental data.");
       } finally {
@@ -299,7 +338,16 @@ export default function DashboardV3() {
     : "";
 
   const currentDrivers = data ? getSystemDrivers(liveTemp, liveHumidity, liveWind, data.aqi.current.pm2_5, data.aqi.current.pm10) : [];
-  const driverLabels = currentDrivers.map(d => d.label.toLowerCase()).join(" • ");
+  const currentStories = data ? getConditionStories(selectedCity, data, aiInsights?.regionalEvents) : [];
+
+  // Merge: AI replaces rule-based text fields when available
+  const displayedInsights = insights ? {
+    ...insights,
+    healthImpact: aiInsights?.healthImpact ?? insights.healthImpact,
+    mainDrivers: aiInsights?.mainDrivers ?? insights.mainDrivers,
+    policyInsights: aiInsights?.policyInsights ?? insights.policyInsights,
+    sdgImpact: aiInsights?.sdgImpact ?? insights.sdgImpact,
+  } : null;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground font-sans pb-16 relative overflow-hidden transition-colors duration-500">
@@ -576,11 +624,14 @@ export default function DashboardV3() {
                         </p>
                         
                         <div className="pt-6 border-t border-black/5 dark:border-white/5 text-center px-4">
-                          <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1 underline decoration-primary/30 underline-offset-4">Health Suggestion</p>
+                          <div className="flex items-center justify-center gap-2 mb-1">
+                            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground underline decoration-primary/30 underline-offset-4">Health Suggestion</p>
+                            {aiInsights && <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">AI</span>}
+                          </div>
                           <p className="text-sm font-medium text-foreground/70">
-                            {liveAQI > 100 
+                            {displayedInsights?.healthImpact ?? (liveAQI > 100
                               ? "People with respiratory issues should consider avoiding strenuous outdoor activities today."
-                              : "The air is generally safe for physical activity, though sensitive groups might want to stay aware."}
+                              : "The air is generally safe for physical activity, though sensitive groups might want to stay aware.")}
                           </p>
                         </div>
                       </div>
@@ -627,15 +678,22 @@ export default function DashboardV3() {
                 <PMChart hourlyData={data.aqi.hourly} />
               </div>
 
-              {/* Primary Sources Strip */}
+              {/* Regional Events Strip */}
               <div className="mt-6">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                  Regional events influencing today’s conditions
-                </h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    Regional events influencing today’s conditions
+                  </h3>
+                  {aiInsights && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                      AI Enhanced
+                    </span>
+                  )}
+                </div>
                 <div className="-mx-4 sm:-mx-6 md:mx-0">
                   <div className="flex flex-col md:grid md:grid-cols-3 gap-4 px-4 sm:px-6 md:px-0">
-                    {STORIES.map(story => (
-                      <div key={story.id} className="w-full flex-shrink-0 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-3xl p-4 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-white/50 transition-colors">
+                    {currentStories.map(story => (
+                      <div key={story.id} className="w-full flex-shrink-0 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-2xl border border-white/60 dark:border-zinc-800/50 rounded-3xl p-4 shadow-sm flex items-center gap-4">
                         <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0", story.bg, story.color)}>
                           <story.icon className="w-6 h-6" />
                         </div>
