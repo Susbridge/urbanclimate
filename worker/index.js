@@ -4,7 +4,7 @@
  * Deploy:
  *   1. npm install -g wrangler
  *   2. wrangler login
- *   3. wrangler deploy worker/index.js --name urban-climate-insights --compatibility-date 2024-01-01
+ *   3. wrangler deploy worker/index.js --name urban-climate --compatibility-date 2024-01-01
  *   4. wrangler secret put GROQ_API_KEY   (paste your key when prompted)
  *
  * The GROQ_API_KEY is stored as a Cloudflare secret — it never appears in
@@ -19,7 +19,7 @@ const ALLOWED_ORIGINS = [
 ];
 
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "llama-3.1-8b-instant";
+const MODEL = "openai/gpt-oss-20b";
 
 function corsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
@@ -104,10 +104,44 @@ export default {
         },
         body: JSON.stringify({
           model: MODEL,
-          messages: [{ role: "user", content: buildPrompt({ city, aqi, weather }) }],
-          max_tokens: 600,
-          temperature: 0.4,
-          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: "Return only JSON that matches the provided schema. Do not include markdown." },
+            { role: "user", content: buildPrompt({ city, aqi, weather }) },
+          ],
+          max_completion_tokens: 2000,
+          temperature: 0.2,
+          reasoning_effort: "low",
+          reasoning_format: "hidden",
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "urban_climate_insight",
+              strict: true,
+              schema: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  healthImpact: { type: "string" },
+                  mainDrivers: { type: "array", items: { type: "string" } },
+                  policyInsights: { type: "string" },
+                  sdgImpact: { type: "string" },
+                  regionalEvents: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        title: { type: "string" },
+                        type: { type: "string", enum: ["Dust", "Fire", "Heat", "Traffic", "Air"] },
+                      },
+                      required: ["title", "type"],
+                    },
+                  },
+                },
+                required: ["healthImpact", "mainDrivers", "policyInsights", "sdgImpact", "regionalEvents"],
+              },
+            },
+          },
         }),
       });
     } catch (err) {
