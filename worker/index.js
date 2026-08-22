@@ -13,6 +13,7 @@
 
 const ALLOWED_ORIGINS = [
   "https://tomiabe.github.io",
+  "https://urbanclimate.susbridge.xyz",
   "http://localhost:3000",
   "http://localhost:4173",
 ];
