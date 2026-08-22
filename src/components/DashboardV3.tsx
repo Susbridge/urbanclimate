@@ -476,7 +476,7 @@ export default function DashboardV3() {
       <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6">
         <div className="mb-8 sm:mb-12 text-center">
           <p className="text-base sm:text-lg font-medium text-muted-foreground max-w-3xl mx-auto">
-            Urban Climate Signals explains why cities feel hotter, how pollution builds up, and what policies can improve urban climate conditions.
+            Urban Climate Signals combines live weather, air quality, and AI-assisted interpretation to explain how cities feel outside, why pollution builds up, and what policies can improve urban climate conditions.
           </p>
         </div>
 

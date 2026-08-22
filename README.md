@@ -1,65 +1,110 @@
 # Urban Climate Signals
-## Turning Urban Heat and Pollution into Decision-Ready Intelligence
 
-**Urban Climate Signals** is a live, city-level climate intelligence dashboard designed for fast-growing African cities, starting with Lagos, Nigeria. It provides real-time environmental data, systemic impact modeling, and interactive policy simulation to help residents and city leaders manage extreme heat and air quality risk.
+## Live Urban Climate Intelligence for African Cities
 
----
+**Urban Climate Signals** is a public-facing environmental intelligence dashboard for fast-growing African cities. It translates live weather and air-quality readings into plain-language climate signals, city scorecards, and policy simulations that help residents, researchers, and decision-makers understand what is happening outside and why it matters.
 
-## 🚀 Key Features
-
-### 1. What is Happening Right Now (Live Signals)
-Real-time monitoring of air temperature, humidity, wind, and AQI. The dashboard focuses on perceived heat (Heat Index) and provides health-focused explanations of current conditions.
-
-### 2. How the City Climate System Works (Systems Map)
-An interactive flow chart that maps the causal links between urban drivers (like urbanization and traffic) and their environmental impacts. It helps non-technical users understand how local choices influence their climate.
-
-### 3. What Cities Can Do (Policy Simulator)
-A decision-studio tool where users can simulate how changes in urban policies—such as increasing tree cover or reducing generator reliance—impact the city’s heat index and air quality in real-time.
-
-### 4. City Resilience Outlook (SDG Tracker)
-A performance scorecard that translates live environmental signals into progress markers for **SDG 3 (Health)** and **SDG 11 (Sustainable Cities)**.
+The project is currently deployed at [urbanclimate.susbridge.xyz](https://urbanclimate.susbridge.xyz/).
 
 ---
 
-## 🛠️ Technology & Data
+## What the App Does
 
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS
-- **Visualizations**: Framer Motion + Lucide Icons + Custom SVG Gauges
-- **Environmental Data**: [Open-Meteo API](https://open-meteo.com/)
-- **Atmospheric Models**: Copernicus CAMS-based signals
-- **Air Quality Standards**: Unified version of the **United States EPA AQI (0-500)**
-- **Geolocation**: Privacy-first IP-based city detection
+### Live Signals
+Shows current temperature, humidity, wind speed, perceived heat, and US AQI for the selected city.
 
----
+### City Search and Location
+Loads the user's current city through browser geolocation when permission is granted, with IP-based location as a fallback. Users can also manually search and switch between African cities.
 
-## 💻 Local Development
+### Environmental Interpretation
+Turns live readings into practical explanations: how it feels outside, what is driving the condition, and what the health implications may be.
 
-**Prerequisites:** Node.js (v18+)
+### Systems Map
+Visualizes how urban systems such as traffic, generators, tree cover, waste burning, and density can influence heat and pollution.
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/tomiabe/urbanclimate.git
-   cd urban-climate-signals
-   ```
+### Policy Simulator
+Lets users explore how changes such as more tree cover, cleaner transport, better waste control, and reduced generator dependence could shift climate stress.
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+### City Scorecard
+Converts live environmental indicators into an easy-to-read resilience outlook aligned with public health and sustainable-city priorities.
 
-3. **Run the development server**:
-   ```bash
-   npm run dev
-   ```
-
-4. **Build for production**:
-   ```bash
-   npm run build
-   ```
+### AI Insights
+Uses a Cloudflare Worker proxy to generate structured AI summaries from the live environmental data. The browser never receives the Groq API key.
 
 ---
 
-## 🧪 Knowledge Lab
-This project is part of the **Susbridge Knowledge Lab**, where we turn complex environmental data into decision tools for impact-driven teams.
+## Data Sources
 
-For more information, visit [susbridge.xyz](https://susbridge.xyz).
+- **Weather and air quality:** [Open-Meteo](https://open-meteo.com/) and Open-Meteo Air Quality API
+- **City search:** Open-Meteo Geocoding API
+- **Browser location fallback:** BigDataCloud reverse geocoding and IP-based city lookup
+- **AQI scale:** US EPA-style AQI values exposed by Open-Meteo
+- **AI summaries:** Groq API via Cloudflare Worker, currently using `openai/gpt-oss-20b`
+
+The app uses a short client-side cache for environmental requests so returning to a city within a few minutes shows consistent readings instead of flickering between API refreshes.
+
+---
+
+## Tech Stack
+
+- **Frontend:** React, TypeScript, Vite
+- **Styling:** Tailwind CSS, Manrope typography
+- **UI and visualization:** Recharts, React Flow, Lucide icons, Motion
+- **Hosting:** GitHub Pages with a custom domain
+- **AI proxy:** Cloudflare Worker
+
+---
+
+## Local Development
+
+**Prerequisites:** Node.js 18+
+
+```bash
+git clone https://github.com/Susbridge/urbanclimate.git
+cd urbanclimate
+npm install
+npm run dev
+```
+
+The dev server runs on port `3000`.
+
+```bash
+npm run build
+npm run lint
+```
+
+---
+
+## Environment Variables
+
+For production AI insights, set this GitHub Actions variable:
+
+```bash
+VITE_INSIGHTS_WORKER_URL=https://urban-climate.tomi.workers.dev
+```
+
+For the Cloudflare Worker, set this secret in Cloudflare:
+
+```bash
+GROQ_API_KEY=your_groq_api_key
+```
+
+---
+
+## Deployment
+
+The frontend is built by GitHub Actions and published to GitHub Pages. The custom domain points to GitHub Pages via DNS.
+
+The Worker is deployed separately to Cloudflare:
+
+```bash
+wrangler deploy worker/index.js --name urban-climate --compatibility-date 2024-01-01
+```
+
+---
+
+## Susbridge Knowledge Lab
+
+Urban Climate Signals is part of the **Susbridge Knowledge Lab**, where complex environmental data is translated into practical decision tools for communities, city leaders, and impact-driven teams.
+
+Learn more at [susbridge.xyz](https://susbridge.xyz/).
