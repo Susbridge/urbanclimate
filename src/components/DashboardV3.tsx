@@ -336,6 +336,7 @@ export default function DashboardV3() {
   const localTime = data?.weather.current.time 
     ? format(parseISO(data.weather.current.time), "h:mm a")
     : "";
+  const hourlyEstimate = data?.weather.source === "historical-forecast";
 
   const currentDrivers = data ? getSystemDrivers(liveTemp, liveHumidity, liveWind, data.aqi.current.pm2_5, data.aqi.current.pm10) : [];
   const currentStories = data ? getConditionStories(selectedCity, data, aiInsights?.regionalEvents) : [];
@@ -448,7 +449,7 @@ export default function DashboardV3() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mr-1">Live</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mr-1">{hourlyEstimate ? "Hourly estimate" : "Live"}</span>
               <span className="text-[10px] font-medium text-muted-foreground border-l border-black/10 dark:border-white/10 pl-2">
                 {localTime}
               </span>
@@ -463,7 +464,7 @@ export default function DashboardV3() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mr-1">Live</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mr-1">{hourlyEstimate ? "Hourly estimate" : "Live"}</span>
               <span className="text-sm font-medium text-muted-foreground border-l border-black/10 dark:border-white/10 pl-2">
                 {localTime}
               </span>
@@ -506,7 +507,7 @@ export default function DashboardV3() {
                   <h2 className="text-3xl font-bold tracking-tight">What's Happening Right Now?</h2>
                 </div>
                 <p className="text-muted-foreground font-medium max-w-2xl text-lg mx-auto">
-                  Real-time environmental conditions in {selectedCity.name}.
+                  {hourlyEstimate ? "Hourly forecast conditions" : "Real-time environmental conditions"} in {selectedCity.name}.
                 </p>
               </div>
 
