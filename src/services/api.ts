@@ -123,6 +123,7 @@ export interface EnvironmentalData {
 
 const AIR_QUALITY_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
 const airQualityCache = new Map<string, { timestamp: number; data: EnvironmentalData }>();
+const INSIGHTS_WORKER_URL = import.meta.env?.VITE_INSIGHTS_WORKER_URL as string | undefined;
 
 function getCityCacheKey(city: City): string {
   return `${city.id}|${city.lat.toFixed(4)}|${city.lng.toFixed(4)}|${city.timezone}`;
@@ -227,18 +228,48 @@ export async function fetchAirQuality(city: City): Promise<EnvironmentalData> {
 
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lng}&current=european_aqi,us_aqi,pm10,pm2_5,nitrogen_dioxide,ozone,carbon_monoxide,sulphur_dioxide&hourly=pm10,pm2_5,european_aqi,us_aqi&timezone=${encodeURIComponent(city.timezone)}&past_days=7`;
   const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,is_day&timezone=${encodeURIComponent(city.timezone)}`;
+
+  async function requestWeather(url: string): Promise<EnvironmentalData["weather"]> {
+    const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!response.ok) throw new Error(`Weather request failed: ${response.status}`);
+
+    const weather = await response.json();
+    if (
+      !Number.isFinite(weather.current?.temperature_2m) ||
+      !Number.isFinite(weather.current?.relative_humidity_2m) ||
+      !Number.isFinite(weather.current?.wind_speed_10m)
+    ) {
+      throw new Error("Weather response is incomplete");
+    }
+    return weather;
+  }
+
+  async function loadWeather(): Promise<EnvironmentalData["weather"]> {
+    if (INSIGHTS_WORKER_URL) {
+      const proxyUrl = new URL("/weather", INSIGHTS_WORKER_URL);
+      proxyUrl.searchParams.set("latitude", String(city.lat));
+      proxyUrl.searchParams.set("longitude", String(city.lng));
+      proxyUrl.searchParams.set("timezone", city.timezone);
+
+      try {
+        return await requestWeather(proxyUrl.toString());
+      } catch (error) {
+        console.warn("Weather proxy unavailable, trying Open-Meteo directly:", error);
+      }
+    }
+    return requestWeather(weatherUrl);
+  }
   
-  const [aqiResponse, weatherResponse] = await Promise.all([
+  const [aqiResponse, weatherData] = await Promise.all([
     fetch(aqiUrl),
-    fetch(weatherUrl)
+    loadWeather()
   ]);
 
-  if (!aqiResponse.ok || !weatherResponse.ok) {
+  if (!aqiResponse.ok) {
     throw new Error("Failed to fetch environmental data");
   }
   
   const aqiData = await aqiResponse.json();
-  const weatherData = await weatherResponse.json();
 
   const result = {
     aqi: aqiData,
