@@ -156,27 +156,35 @@ export async function searchCities(query: string): Promise<City[]> {
 }
 
 export async function fetchLocationByIP(): Promise<City> {
-  try {
-    const response = await fetch('https://ipapi.co/json/');
-    const data = await response.json();
-    
-    const curatedCity = findCuratedCity(data.city, data.country_name) || 
-                        findCuratedCity(data.region, data.country_name);
-                         
-    if (curatedCity) return curatedCity;
-
-    return {
-      id: `ip-${data.city}-${data.country_code}`,
-      name: data.city || "Current Location",
-      country: data.country_name || "",
-      lat: data.latitude,
-      lng: data.longitude,
-      timezone: data.timezone || "UTC"
-    };
-  } catch (error) {
-    console.error("Error fetching location by IP:", error);
-    throw error;
+  const response = await fetch('https://ipapi.co/json/');
+  if (!response.ok) {
+    throw new Error(`IP location request failed: ${response.status}`);
   }
+
+  const data = await response.json();
+  if (
+    data.error ||
+    !Number.isFinite(data.latitude) ||
+    !Number.isFinite(data.longitude) ||
+    Math.abs(data.latitude) > 90 ||
+    Math.abs(data.longitude) > 180
+  ) {
+    throw new Error("IP location returned invalid coordinates");
+  }
+
+  const curatedCity = findCuratedCity(data.city, data.country_name) ||
+                      findCuratedCity(data.region, data.country_name);
+
+  if (curatedCity) return curatedCity;
+
+  return {
+    id: `ip-${data.city}-${data.country_code}`,
+    name: data.city || "Current Location",
+    country: data.country_name || "",
+    lat: data.latitude,
+    lng: data.longitude,
+    timezone: data.timezone || "UTC"
+  };
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<City> {
