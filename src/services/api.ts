@@ -111,6 +111,7 @@ export interface AirQualityData {
 export interface EnvironmentalData {
   aqi: AirQualityData;
   weather: {
+    source?: "historical-forecast";
     current: {
       time: string;
       temperature_2m: number;

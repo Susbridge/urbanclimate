@@ -31,6 +31,42 @@ function corsHeaders(origin) {
   };
 }
 
+async function fetchForecast(url, timeoutMs) {
+  const response = await fetch(url.toString(), {
+    signal: AbortSignal.timeout(timeoutMs),
+    cf: { cacheTtl: 180, cacheEverything: true },
+  });
+  if (!response.ok) throw new Error(`Open-Meteo returned ${response.status}`);
+  return response.json();
+}
+
+function hasCurrentWeather(data) {
+  return Number.isFinite(data?.current?.temperature_2m) &&
+    Number.isFinite(data?.current?.relative_humidity_2m) &&
+    Number.isFinite(data?.current?.wind_speed_10m);
+}
+
+function currentFromHourlyForecast(data) {
+  if (!Number.isFinite(data.utc_offset_seconds) || !Array.isArray(data.hourly?.time)) {
+    throw new Error("Open-Meteo returned incomplete hourly weather data");
+  }
+
+  const localHour = new Date(Date.now() + data.utc_offset_seconds * 1000).toISOString().slice(0, 13);
+  const index = data.hourly.time.findLastIndex((time) => time <= `${localHour}:00`);
+  if (index < 0) throw new Error("Open-Meteo did not return the current hour");
+
+  const current = {
+    time: data.hourly.time[index],
+    temperature_2m: data.hourly.temperature_2m?.[index],
+    relative_humidity_2m: data.hourly.relative_humidity_2m?.[index],
+    wind_speed_10m: data.hourly.wind_speed_10m?.[index],
+    is_day: data.hourly.is_day?.[index],
+  };
+  const weather = { current, source: "historical-forecast" };
+  if (!hasCurrentWeather(weather)) throw new Error("Open-Meteo returned incomplete hourly weather data");
+  return weather;
+}
+
 async function fetchWeather(request, headers) {
   const params = new URL(request.url).searchParams;
   const latitude = Number(params.get("latitude"));
@@ -55,20 +91,21 @@ async function fetchWeather(request, headers) {
   upstream.searchParams.set("current", "temperature_2m,relative_humidity_2m,wind_speed_10m,is_day");
   upstream.searchParams.set("timezone", timezone);
 
-  try {
-    const response = await fetch(upstream.toString(), {
-      signal: AbortSignal.timeout(12000),
-      cf: { cacheTtl: 180, cacheEverything: true },
-    });
-    if (!response.ok) throw new Error(`Open-Meteo returned ${response.status}`);
+  const hourlyFallback = new URL("https://historical-forecast-api.open-meteo.com/v1/forecast");
+  hourlyFallback.searchParams.set("latitude", String(latitude));
+  hourlyFallback.searchParams.set("longitude", String(longitude));
+  hourlyFallback.searchParams.set("hourly", "temperature_2m,relative_humidity_2m,wind_speed_10m,is_day");
+  hourlyFallback.searchParams.set("timezone", timezone);
+  hourlyFallback.searchParams.set("forecast_days", "1");
 
-    const data = await response.json();
-    if (
-      !Number.isFinite(data.current?.temperature_2m) ||
-      !Number.isFinite(data.current?.relative_humidity_2m) ||
-      !Number.isFinite(data.current?.wind_speed_10m)
-    ) {
-      throw new Error("Open-Meteo returned incomplete weather data");
+  try {
+    let data;
+    try {
+      data = await fetchForecast(upstream, 4000);
+      if (!hasCurrentWeather(data)) throw new Error("Open-Meteo returned incomplete weather data");
+    } catch (error) {
+      console.warn("Current forecast unavailable, using hourly forecast:", error);
+      data = currentFromHourlyForecast(await fetchForecast(hourlyFallback, 8000));
     }
 
     return new Response(JSON.stringify(data), {

@@ -35,7 +35,7 @@ Uses a Cloudflare Worker proxy to generate structured AI summaries from the live
 
 ## Data Sources
 
-- **Weather and air quality:** [Open-Meteo](https://open-meteo.com/) and Open-Meteo Air Quality API. Weather requests use the Cloudflare Worker proxy, with a direct request as a fallback when the proxy is unavailable.
+- **Weather and air quality:** [Open-Meteo](https://open-meteo.com/) and Open-Meteo Air Quality API. Weather requests use the Cloudflare Worker proxy, which falls back to today's hourly forecast when the current endpoint is unavailable. The browser tries Open-Meteo directly if the Worker is unavailable.
 - **City search:** Open-Meteo Geocoding API
 - **Browser location fallback:** BigDataCloud reverse geocoding and IP-based city lookup
 - **AQI scale:** US EPA-style AQI values exposed by Open-Meteo
