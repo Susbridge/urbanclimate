@@ -1,5 +1,5 @@
 /**
- * Cloudflare Worker — Groq API proxy for Urban Climate Signals
+ * Cloudflare Worker — weather and Groq API proxy for Urban Climate Signals
  *
  * Deploy:
  *   1. npm install -g wrangler
@@ -25,10 +25,63 @@ function corsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
   };
+}
+
+async function fetchWeather(request, headers) {
+  const params = new URL(request.url).searchParams;
+  const latitude = Number(params.get("latitude"));
+  const longitude = Number(params.get("longitude"));
+  const timezone = params.get("timezone") || "UTC";
+
+  if (
+    !params.has("latitude") || !params.has("longitude") ||
+    !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+    Math.abs(latitude) > 90 || Math.abs(longitude) > 180 ||
+    timezone.length > 100
+  ) {
+    return new Response(JSON.stringify({ error: "Invalid weather location" }), {
+      status: 400,
+      headers: { ...headers, "Content-Type": "application/json" },
+    });
+  }
+
+  const upstream = new URL("https://api.open-meteo.com/v1/forecast");
+  upstream.searchParams.set("latitude", String(latitude));
+  upstream.searchParams.set("longitude", String(longitude));
+  upstream.searchParams.set("current", "temperature_2m,relative_humidity_2m,wind_speed_10m,is_day");
+  upstream.searchParams.set("timezone", timezone);
+
+  try {
+    const response = await fetch(upstream.toString(), {
+      signal: AbortSignal.timeout(12000),
+      cf: { cacheTtl: 180, cacheEverything: true },
+    });
+    if (!response.ok) throw new Error(`Open-Meteo returned ${response.status}`);
+
+    const data = await response.json();
+    if (
+      !Number.isFinite(data.current?.temperature_2m) ||
+      !Number.isFinite(data.current?.relative_humidity_2m) ||
+      !Number.isFinite(data.current?.wind_speed_10m)
+    ) {
+      throw new Error("Open-Meteo returned incomplete weather data");
+    }
+
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { ...headers, "Content-Type": "application/json", "Cache-Control": "public, max-age=180" },
+    });
+  } catch (error) {
+    console.error("Weather proxy failed:", error);
+    return new Response(JSON.stringify({ error: "Weather data unavailable" }), {
+      status: 502,
+      headers: { ...headers, "Content-Type": "application/json" },
+    });
+  }
 }
 
 function buildPrompt({ city, aqi, weather }) {
@@ -70,6 +123,10 @@ export default {
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers });
+    }
+
+    if (request.method === "GET" && new URL(request.url).pathname === "/weather") {
+      return fetchWeather(request, headers);
     }
 
     if (request.method !== "POST") {
